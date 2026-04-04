@@ -1,0 +1,150 @@
+{
+  "sorting": [
+    {
+      "id": "q1",
+      "question": "What is the time complexity of Bubble Sort in the worst case?",
+      "options": ["O(n)", "O(n log n)", "O(n²)", "O(log n)"],
+      "correct": 2,
+      "explanation": "Bubble Sort compares adjacent elements and swaps them. In the worst case it needs n*(n-1)/2 comparisons, giving O(n²)."
+    },
+    {
+      "id": "q2",
+      "question": "Which sorting algorithm is most efficient for nearly sorted data?",
+      "options": ["Quick Sort", "Merge Sort", "Insertion Sort", "Selection Sort"],
+      "correct": 2,
+      "explanation": "Insertion Sort performs at O(n) for nearly sorted arrays as very few swaps are needed."
+    },
+    {
+      "id": "q3",
+      "question": "What is the space complexity of Merge Sort?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+      "correct": 2,
+      "explanation": "Merge Sort requires O(n) extra space for the temporary arrays used during merging."
+    },
+    {
+      "id": "q4",
+      "question": "Which sorting algorithm uses the divide and conquer strategy?",
+      "options": ["Bubble Sort", "Selection Sort", "Quick Sort", "Insertion Sort"],
+      "correct": 2,
+      "explanation": "Quick Sort divides the array around a pivot element and recursively sorts sub-arrays."
+    },
+    {
+      "id": "q5",
+      "question": "What is the best case time complexity of Quick Sort?",
+      "options": ["O(n²)", "O(n log n)", "O(n)", "O(log n)"],
+      "correct": 1,
+      "explanation": "In the best case, Quick Sort's pivot always divides the array into two equal halves giving O(n log n)."
+    }
+  ],
+  "cpu-scheduling": [
+    {
+      "id": "q1",
+      "question": "Which CPU scheduling algorithm can cause starvation?",
+      "options": ["FCFS", "Round Robin", "Priority Scheduling", "SJF"],
+      "correct": 2,
+      "explanation": "Priority Scheduling can starve low-priority processes indefinitely if high-priority processes keep arriving."
+    },
+    {
+      "id": "q2",
+      "question": "What is the time quantum in Round Robin scheduling?",
+      "options": ["Process burst time", "A fixed time slice given to each process", "Total CPU time", "Waiting time"],
+      "correct": 1,
+      "explanation": "Round Robin assigns a fixed time quantum to each process in circular order."
+    },
+    {
+      "id": "q3",
+      "question": "FCFS scheduling is:",
+      "options": ["Preemptive", "Non-preemptive", "Both", "Neither"],
+      "correct": 1,
+      "explanation": "FCFS (First Come First Served) is non-preemptive. Once a process gets the CPU it runs until completion."
+    },
+    {
+      "id": "q4",
+      "question": "Which scheduling algorithm minimizes average waiting time for a given set of processes?",
+      "options": ["FCFS", "Round Robin", "SRTF (Preemptive SJF)", "Priority"],
+      "correct": 2,
+      "explanation": "SRTF (Shortest Remaining Time First) is optimal for minimizing average waiting time."
+    },
+    {
+      "id": "q5",
+      "question": "Turnaround time is defined as:",
+      "options": ["Time spent waiting in queue", "Time from submission to completion", "Burst time only", "Response time"],
+      "correct": 1,
+      "explanation": "Turnaround time = Completion time - Arrival time. It includes both waiting time and burst time."
+    }
+  ],
+  "page-replacement": [
+    {
+      "id": "q1",
+      "question": "Which page replacement algorithm causes Belady's anomaly?",
+      "options": ["LRU", "Optimal", "FIFO", "Clock"],
+      "correct": 2,
+      "explanation": "Belady's anomaly occurs in FIFO where increasing frames can sometimes increase page faults."
+    },
+    {
+      "id": "q2",
+      "question": "The Optimal page replacement algorithm replaces:",
+      "options": ["The page used most recently", "The page not used for longest time in future", "The first page loaded", "A random page"],
+      "correct": 1,
+      "explanation": "Optimal algorithm replaces the page that will not be used for the longest time in the future."
+    },
+    {
+      "id": "q3",
+      "question": "LRU stands for:",
+      "options": ["Last Recently Used", "Least Recently Used", "Least Replaceable Unit", "Last Replaced Unit"],
+      "correct": 1,
+      "explanation": "LRU (Least Recently Used) replaces the page that has not been used for the longest time in the past."
+    },
+    {
+      "id": "q4",
+      "question": "A page fault occurs when:",
+      "options": ["A page is found in memory", "A requested page is not in main memory", "Memory is full", "A page is written to disk"],
+      "correct": 1,
+      "explanation": "A page fault is triggered when the CPU accesses a page that is not currently in main memory."
+    },
+    {
+      "id": "q5",
+      "question": "Thrashing in virtual memory refers to:",
+      "options": ["High CPU utilization", "Excessive page faults causing low CPU utilization", "Memory overflow", "Cache miss"],
+      "correct": 1,
+      "explanation": "Thrashing occurs when processes spend more time swapping pages than executing, causing very low CPU utilization."
+    }
+  ],
+  "disk-scheduling": [
+    {
+      "id": "q1",
+      "question": "Which disk scheduling algorithm services the request closest to the current head position?",
+      "options": ["FCFS", "SCAN", "SSTF", "C-SCAN"],
+      "correct": 2,
+      "explanation": "SSTF (Shortest Seek Time First) always services the request nearest to the current head position."
+    },
+    {
+      "id": "q2",
+      "question": "The SCAN algorithm is also known as:",
+      "options": ["Round Robin", "Elevator Algorithm", "Cyclic SCAN", "Priority Scan"],
+      "correct": 1,
+      "explanation": "SCAN moves the disk arm like an elevator, servicing requests in one direction then reversing."
+    },
+    {
+      "id": "q3",
+      "question": "C-SCAN differs from SCAN in that:",
+      "options": ["It reverses direction at the end", "It jumps back to the beginning and scans in one direction only", "It services randomly", "It uses shortest seek time"],
+      "correct": 1,
+      "explanation": "C-SCAN provides more uniform wait times by returning to the beginning and scanning only in one direction."
+    },
+    {
+      "id": "q4",
+      "question": "Total seek time is minimized best by:",
+      "options": ["FCFS", "SSTF", "C-SCAN", "LOOK"],
+      "correct": 1,
+      "explanation": "SSTF minimizes individual seek times by always picking the nearest request, though it can cause starvation."
+    },
+    {
+      "id": "q5",
+      "question": "FCFS disk scheduling is:",
+      "options": ["Optimal", "Fair but may cause high seek times", "Always fastest", "Causes starvation"],
+      "correct": 1,
+      "explanation": "FCFS is fair (no starvation) but can result in high total seek times due to random order of requests."
+    }
+  ]
+}

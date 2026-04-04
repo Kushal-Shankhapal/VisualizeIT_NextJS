@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisualizeIT — Don't Just Think, VisualizeIT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #e0e5ec;
+    --panel: #f0f2f5;
+    --muted: #d1d9e6;
+    --text: #2d3436;
+    --text-muted: #4a5568;
+    --accent: #ff4757;
+    --accent-fg: #ffffff;
+    --border: #babecc;
+    --border-light: #ffffff;
+    --border-dark: #a3b1c6;
+    --dark-panel: #2d3436;
+    --shadow-card: 8px 8px 16px #babecc, -8px -8px 16px #ffffff;
+    --shadow-float: 12px 12px 24px #babecc, -12px -12px 24px #ffffff, inset 1px 1px 0 rgba(255,255,255,0.5);
+    --shadow-pressed: inset 6px 6px 12px #babecc, inset -6px -6px 12px #ffffff;
+    --shadow-recessed: inset 4px 4px 8px #babecc, inset -4px -4px 8px #ffffff;
+    --shadow-sharp: 4px 4px 8px rgba(0,0,0,0.15), -1px -1px 1px rgba(255,255,255,0.8);
+    --shadow-glow: 0 0 10px 2px rgba(255, 71, 87, 0.6);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-2xl: 30px;
+    --font: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background-color: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ===== UTILITIES ===== */
+  .container { max-width: 1152px; margin: 0 auto; padding: 0 24px; }
+  .mono { font-family: var(--mono); }
+  .accent { color: var(--accent); }
+  
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+    box-shadow: var(--shadow-recessed);
+    color: var(--text-muted);
+    display: inline-block;
+  }
+
+  .badge-accent {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 4px 4px 8px rgba(166,50,60,0.4), -4px -4px 8px rgba(255,100,110,0.4);
+  }
+
+  /* LED indicator */
+  .led {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px 2px rgba(34,197,94,0.7);
+    animation: pulse 2s ease-in-out infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .led-red { background: var(--accent); box-shadow: var(--shadow-glow); }
+  .led-yellow { background: #f59e0b; box-shadow: 0 0 8px 2px rgba(245,158,11,0.7); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Screw detail */
+  .screw {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 40% 40%, rgba(255,255,255,0.6) 2px, transparent 3px),
+      radial-gradient(circle at 50% 50%, #c8cdd6 40%, #a8b1bc 100%);
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15), inset -1px -1px 1px rgba(255,255,255,0.6);
+    flex-shrink: 0;
+  }
+
+  /* Vent slots */
+  .vents { display: flex; gap: 3px; align-items: center; }
+  .vent {
+    width: 2px; height: 18px;
+    border-radius: 1px;
+    background: var(--muted);
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.12);
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    box-shadow: 0 4px 16px rgba(163,177,198,0.4), 0 -1px 0 rgba(255,255,255,0.8) inset;
+    padding: 0 24px;
+  }
+
+  .nav-inner {
+    max-width: 1152px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    gap: 32px;
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    box-shadow: 4px 4px 8px rgba(166,50,60,0.4), -2px -2px 6px rgba(255,100,110,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+    flex: 1;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-links a:hover {
+    color: var(--text);
+    background: var(--muted);
+    box-shadow: var(--shadow-recessed);
+  }
+
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    outline: none;
+    min-height: 40px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 4px 4px 8px rgba(166,50,60,0.4), -3px -3px 6px rgba(255,100,110,0.25);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(2px); box-shadow: var(--shadow-pressed); filter: brightness(0.95); }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: var(--shadow-card);
+  }
+  .btn-secondary:hover { color: var(--accent); box-shadow: var(--shadow-float); transform: translateY(-1px); }
+  .btn-secondary:active { transform: translateY(2px); box-shadow: var(--shadow-pressed); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    box-shadow: none;
+  }
+  .btn-ghost:hover { background: var(--muted); box-shadow: var(--shadow-recessed); color: var(--text); }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 80px 0 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    filter: drop-shadow(0 1px 1px #ffffff);
+    margin-bottom: 24px;
+  }
+
+  .hero-title .line-accent {
+    color: var(--accent);
+    display: block;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 500px;
+    margin-bottom: 36px;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  /* Device mockup */
+  .device-wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .device {
+    width: 100%;
+    max-width: 480px;
+    border-radius: var(--radius-xl);
+    background: #1a1f2e;
+    box-shadow:
+      20px 20px 40px #babecc,
+      -8px -8px 20px #ffffff,
+      inset 0 0 0 3px #0d1117;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Carbon fiber texture on device */
+  .device::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 8px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 8px
+      );
+    border-radius: var(--radius-xl);
+    pointer-events: none;
+  }
+
+  .device-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 12px;
+  }
+
+  .device-dots { display: flex; gap: 6px; }
+  .device-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .device-dot:nth-child(1) { background: #ff5f57; }
+  .device-dot:nth-child(2) { background: #febc2e; }
+  .device-dot:nth-child(3) { background: #28c840; }
+
+  .device-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .device-screen {
+    border-radius: var(--radius-lg);
+    background: #0d1117;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* CRT scanlines */
+  .device-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.18) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    border-radius: var(--radius-lg);
+  }
+
+  .sim-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* Sorting bars visualization */
+  .sort-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    margin-bottom: 16px;
+  }
+
+  .sort-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* Stat row in device */
+  .device-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .device-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    text-align: center;
+  }
+
+  .device-stat-val {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    display: block;
+  }
+
+  .device-stat-lbl {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .device-progress {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+
+  .device-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(255,71,87,0.6);
+    animation: progress-run 3s ease-in-out infinite;
+  }
+
+  @keyframes progress-run {
+    0% { width: 20%; }
+    50% { width: 75%; }
+    100% { width: 20%; }
+  }
+
+  /* Side buttons on device */
+  .device-side-btn {
+    position: absolute;
+    right: -6px;
+    width: 6px;
+    border-radius: 0 3px 3px 0;
+    background: #2a2f3e;
+    box-shadow: 2px 1px 3px rgba(0,0,0,0.4);
+  }
+
+  /* ===== STATS BAR ===== */
+  .stats-bar {
+    background: var(--dark-panel);
+    padding: 28px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stats-bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,71,87,0.4), transparent);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 12px 20px;
+    position: relative;
+  }
+
+  .stat-item + .stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  .stat-val span { color: var(--accent); }
+
+  .stat-lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ===== SECTION COMMON ===== */
+  section { padding: 96px 0; }
+
+  .section-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .section-title {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    filter: drop-shadow(0 1px 0 #ffffff);
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 600px;
+    margin-bottom: 56px;
+  }
+
+  /* ===== SIMULATION CARDS ===== */
+  .sim-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+
+  .sim-card {
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+    box-shadow: var(--shadow-card);
+    padding: 28px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .sim-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-float);
+  }
+
+  /* Corner screws */
+  .sim-card::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255,255,255,0.5) 2px, transparent 2.5px),
+      radial-gradient(circle at 50% 50%, #c0c8d4 40%, #a0aab8 100%);
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
+  }
+  .sim-card::after {
+    content: '';
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255,255,255,0.5) 2px, transparent 2.5px),
+      radial-gradient(circle at 50% 50%, #c0c8d4 40%, #a0aab8 100%);
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .sim-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .sim-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: var(--shadow-float);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .sim-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+    box-shadow: var(--shadow-recessed);
+  }
+
+  .sim-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .sim-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .sim-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sim-vents { display: flex; gap: 2px; align-items: center; }
+  .sim-vent { width: 2px; height: 14px; border-radius: 1px; background: var(--muted); box-shadow: inset 0 1px 1px rgba(0,0,0,0.1); }
+
+  .btn-sim {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--accent);
+    box-shadow: var(--shadow-card);
+    text-decoration: none;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-sim:hover { box-shadow: var(--shadow-float); transform: translateY(-1px); }
+  .btn-sim:active { transform: translateY(1px); box-shadow: var(--shadow-pressed); }
+
+  /* ===== ABOUT SECTION ===== */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .about-visual {
+    border-radius: var(--radius-2xl);
+    background: var(--bg);
+    box-shadow: var(--shadow-card);
+    padding: 40px;
+    position: relative;
+  }
+
+  .about-visual .screw-tl { position: absolute; top: 16px; left: 16px; }
+  .about-visual .screw-tr { position: absolute; top: 16px; right: 16px; }
+  .about-visual .screw-bl { position: absolute; bottom: 16px; left: 16px; }
+  .about-visual .screw-br { position: absolute; bottom: 16px; right: 16px; }
+
+  .about-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .about-stat-card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .about-stat-num {
+    font-family: var(--mono);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    filter: drop-shadow(0 1px 0 #fff);
+  }
+
+  .about-stat-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .about-body p {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    max-width: 540px;
+  }
+
+  /* ===== HOW IT WORKS ===== */
+  .hiw-section { background: var(--dark-panel); position: relative; overflow: hidden; }
+
+  .hiw-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .hiw-section .section-title { color: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .hiw-section .section-sub { color: rgba(255,255,255,0.5); }
+  .hiw-section .section-tag { color: var(--accent); }
+
+  .hiw-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    position: relative;
+  }
+
+  /* Connector pipe between steps — desktop only */
+  .hiw-steps::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    left: calc(12.5% + 20px);
+    right: calc(12.5% + 20px);
+    height: 3px;
+    border-radius: 2px;
+    background: #3a4050;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .hiw-step {
+    text-align: center;
+    position: relative;
+  }
+
+  .hiw-num {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: #1a1f2e;
+    box-shadow:
+      8px 8px 16px rgba(0,0,0,0.4),
+      -4px -4px 8px rgba(255,255,255,0.05),
+      inset 0 0 0 2px rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+  }
+
+  .hiw-step-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .hiw-step-desc {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  /* ===== CAMPUS + FUNLAB ===== */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .preview-card {
+    border-radius: var(--radius-2xl);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .preview-card-campus {
+    background: linear-gradient(135deg, #1e2a3a 0%, #0d1520 100%);
+    box-shadow: var(--shadow-card);
+  }
+
+  .preview-card-funlab {
+    background: linear-gradient(135deg, #2a1a1a 0%, #1a0d0d 100%);
+    box-shadow: var(--shadow-card);
+  }
+
+  .preview-card-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .preview-card-icon {
+    font-size: 48px;
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    opacity: 0.15;
+  }
+
+  .preview-card-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .preview-card-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+
+  .preview-card-desc {
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+    max-width: 380px;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--dark-panel);
+    padding: 64px 0 32px;
+    position: relative;
+  }
+
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,71,87,0.3), transparent);
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 56px;
+  }
+
+  .footer-brand-name {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-brand-desc {
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.7;
+    max-width: 260px;
+    margin-bottom: 20px;
+  }
+
+  .footer-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .footer-col-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 20px;
+  }
+
+  .footer-links { list-style: none; }
+  .footer-links li { margin-bottom: 10px; }
+  .footer-links a {
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-links a:hover { color: rgba(255,255,255,0.9); }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes sort-anim {
+    0%, 100% { height: var(--h1); }
+    25% { height: var(--h2); }
+    50% { height: var(--h3); }
+    75% { height: var(--h4); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1024px) {
+    .sim-grid { grid-template-columns: repeat(2, 1fr); }
+    .hiw-steps { grid-template-columns: repeat(2, 1fr); }
+    .hiw-steps::before { display: none; }
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+
+  @media (max-width: 768px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .device-wrap { order: -1; }
+    .about-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .sim-grid { grid-template-columns: 1fr; }
+    .preview-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .nav-status { display: none; }
+    .hiw-steps { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+    section { padding: 64px 0; }
+    .hero { padding: 48px 0 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">V</div>
+      VisualizeIT
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/simulations">Simulations</a></li>
+      <li><a href="/academics">Academics</a></li>
+      <li><a href="/campus">Explore Campus</a></li>
+      <li><a href="/fun-lab">Fun Lab</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="nav-status">
+        <div class="led"></div>
+        <span>System Online</span>
+      </div>
+      <a href="/signin" class="btn btn-primary" style="font-size:12px; padding: 8px 16px; min-height:36px;">
+        Sign In
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <!-- Left: Text -->
+      <div>
+        <div class="hero-eyebrow fade-up">
+          <div class="led led-red"></div>
+          <span class="badge badge-accent">Beta v1.0</span>
+          <span class="badge">Engineering Simulations</span>
+        </div>
+
+        <h1 class="hero-title fade-up delay-1">
+          Don't Just Think,
+          <span class="line-accent">VisualizeIT.</span>
+        </h1>
+
+        <p class="hero-sub fade-up delay-2">
+          Interactive simulations aligned with real engineering curricula.
+          Explore, experiment, and learn by doing — not just reading.
+        </p>
+
+        <div class="hero-btns fade-up delay-3">
+          <a href="#featured" class="btn btn-primary">
+            Start Exploring
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+          <a href="/simulations" class="btn btn-secondary">
+            Explore Simulations
+          </a>
+        </div>
+
+        <!-- Micro stats -->
+        <div style="display:flex; gap:28px; margin-top:48px;" class="fade-up delay-4">
+          <div>
+            <span class="mono" style="font-size:1.4rem; font-weight:700; color:var(--text); display:block; filter:drop-shadow(0 1px 0 #fff);">50+</span>
+            <span style="font-size:12px; color:var(--text-muted);">Simulations</span>
+          </div>
+          <div style="width:1px; background:var(--border);"></div>
+          <div>
+            <span class="mono" style="font-size:1.4rem; font-weight:700; color:var(--text); display:block; filter:drop-shadow(0 1px 0 #fff);">8+</span>
+            <span style="font-size:12px; color:var(--text-muted);">Subjects</span>
+          </div>
+          <div style="width:1px; background:var(--border);"></div>
+          <div>
+            <span class="mono" style="font-size:1.4rem; font-weight:700; color:var(--text); display:block; filter:drop-shadow(0 1px 0 #fff);">Free</span>
+            <span style="font-size:12px; color:var(--text-muted);">Always</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Device mockup -->
+      <div class="device-wrap fade-up delay-2">
+        <div class="device">
+          <!-- Side buttons -->
+          <div class="device-side-btn" style="top:60px; height:40px;"></div>
+          <div class="device-side-btn" style="top:110px; height:28px;"></div>
+
+          <div class="device-header">
+            <div class="device-dots">
+              <div class="device-dot"></div>
+              <div class="device-dot"></div>
+              <div class="device-dot"></div>
+            </div>
+            <span class="device-title">Sorting Visualizer — Active</span>
+            <div class="led" style="width:6px;height:6px;"></div>
+          </div>
+
+          <div class="device-screen">
+            <div class="sim-label">// bubble_sort.sim — Step 14/32</div>
+
+            <!-- Animated sort bars -->
+            <div class="sort-bars" id="sortBars">
+              <!-- Bars injected by JS -->
+            </div>
+
+            <!-- Compare arrows -->
+            <div style="display:flex; gap:4px; align-items:center; margin-bottom:12px;">
+              <div style="height:1px; background:rgba(255,71,87,0.3); flex:1;"></div>
+              <span style="font-family:var(--mono); font-size:8px; color:rgba(255,71,87,0.6); letter-spacing:0.06em;">COMPARING</span>
+              <div style="height:1px; background:rgba(255,71,87,0.3); flex:1;"></div>
+            </div>
+
+            <!-- Device stats -->
+            <div class="device-stats">
+              <div class="device-stat">
+                <span class="device-stat-val" id="compareCount">14</span>
+                <span class="device-stat-lbl">Comparisons</span>
+              </div>
+              <div class="device-stat">
+                <span class="device-stat-val" id="swapCount">06</span>
+                <span class="device-stat-lbl">Swaps</span>
+              </div>
+              <div class="device-stat">
+                <span class="device-stat-val" style="color:var(--accent);">O(n²)</span>
+                <span class="device-stat-lbl">Complexity</span>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="device-progress">
+              <div class="device-progress-fill"></div>
+            </div>
+          </div>
+
+          <!-- Bottom toolbar -->
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 4px 4px;">
+            <div style="display:flex; gap:8px;">
+              <div style="width:28px; height:20px; border-radius:4px; background:#1a1f2e; box-shadow:inset 0 1px 3px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center;">
+                <div style="width:0; height:0; border-top:4px solid transparent; border-bottom:4px solid transparent; border-left:6px solid rgba(255,255,255,0.5);"></div>
+              </div>
+              <div style="width:28px; height:20px; border-radius:4px; background:#1a1f2e; box-shadow:inset 0 1px 3px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; gap:2px;">
+                <div style="width:3px; height:8px; background:rgba(255,255,255,0.4); border-radius:1px;"></div>
+                <div style="width:3px; height:8px; background:rgba(255,255,255,0.4); border-radius:1px;"></div>
+              </div>
+            </div>
+            <div class="vents">
+              <div class="vent" style="background:rgba(255,255,255,0.08);"></div>
+              <div class="vent" style="background:rgba(255,255,255,0.08);"></div>
+              <div class="vent" style="background:rgba(255,255,255,0.08);"></div>
+            </div>
+            <div style="font-family:var(--mono); font-size:8px; color:rgba(255,255,255,0.2); letter-spacing:0.06em;">VIT-SIM-01</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS BAR ===== -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-val">50<span>+</span></span>
+        <span class="stat-lbl">Simulations Live</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">4<span>+</span></span>
+        <span class="stat-lbl">Engineering Branches</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">24<span>/7</span></span>
+        <span class="stat-lbl">Free Access</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">100<span>%</span></span>
+        <span class="stat-lbl">Curriculum Aligned</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FEATURED SIMULATIONS ===== -->
+<section id="featured">
+  <div class="container">
+    <span class="section-tag">// featured.simulations</span>
+    <h2 class="section-title">Pick a Module, Fire It Up</h2>
+    <p class="section-sub">
+      From sorting algorithms to CPU schedulers — every simulation responds in real time.
+      Adjust inputs, watch it run, build intuition.
+    </p>
+
+    <div class="sim-grid">
+      <!-- Card 1 -->
+      <div class="sim-card">
+        <div class="sim-card-top">
+          <div class="sim-icon">⚙️</div>
+          <span class="sim-tag">DSA</span>
+        </div>
+        <h3 class="sim-card-title">Sorting Algorithms</h3>
+        <p class="sim-card-desc">Visualize Bubble, Merge, Quick and Heap sort side by side. Watch comparisons and swaps happen live.</p>
+        <div class="sim-card-footer">
+          <div class="sim-vents">
+            <div class="sim-vent"></div><div class="sim-vent"></div><div class="sim-vent"></div>
+          </div>
+          <a href="/simulations/sorting" class="btn-sim">Open →</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="sim-card">
+        <div class="sim-card-top">
+          <div class="sim-icon">🖥️</div>
+          <span class="sim-tag">OS</span>
+        </div>
+        <h3 class="sim-card-title">CPU Scheduling</h3>
+        <p class="sim-card-desc">Simulate FCFS, SJF, Round Robin and Priority scheduling. Track Gantt charts and waiting times.</p>
+        <div class="sim-card-footer">
+          <div class="sim-vents">
+            <div class="sim-vent"></div><div class="sim-vent"></div><div class="sim-vent"></div>
+          </div>
+          <a href="/simulations/cpu-scheduling" class="btn-sim">Open →</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="sim-card">
+        <div class="sim-card-top">
+          <div class="sim-icon">💾</div>
+          <span class="sim-tag">OS</span>
+        </div>
+        <h3 class="sim-card-title">Disk Scheduling</h3>
+        <p class="sim-card-desc">Trace SSTF, SCAN, C-SCAN disk arm movement. Compare seek time across algorithms.</p>
+        <div class="sim-card-footer">
+          <div class="sim-vents">
+            <div class="sim-vent"></div><div class="sim-vent"></div><div class="sim-vent"></div>
+          </div>
+          <a href="/simulations/disk-scheduling" class="btn-sim">Open →</a>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="sim-card">
+        <div class="sim-card-top">
+          <div class="sim-icon">📋</div>
+          <span class="sim-tag">OS</span>
+        </div>
+        <h3 class="sim-card-title">Page Replacement</h3>
+        <p class="sim-card-desc">Simulate FIFO, LRU, Optimal page replacement. Track page faults in real time.</p>
+        <div class="sim-card-footer">
+          <div class="sim-vents">
+            <div class="sim-vent"></div><div class="sim-vent"></div><div class="sim-vent"></div>
+          </div>
+          <a href="/simulations/page-replacement" class="btn-sim">Open →</a>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="sim-card">
+        <div class="sim-card-top">
+          <div class="sim-icon">�:�️</div>
+          <span class="sim-tag">DBMS</span>
+        </div>
+        <h3 class="sim-card-title">ER Diagram Builder</h3>
+        <p class="sim-card-desc">Drag and drop entities, define relationships. Generate schema from visual ER diagrams.</p>
+        <div class="sim-card-footer">
+          <div class="sim-vents">
+            <div class="sim-vent"></div><div class="sim-vent"></div><div class="sim-vent"></div>
+          </div>
+          <a href="/simulations/er-diagram" class="btn-sim">Open →</a>
+        </div>
+      </div>
+
+      <!-- Card 6: CTA -->
+      <div class="sim-card" style="background: var(--accent); box-shadow: 8px 8px 16px rgba(166,50,60,0.4), -8px -8px 16px rgba(255,100,110,0.2); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:16px;">
+        <div style="font-size:2rem;">🚀</div>
+        <h3 style="font-size:1.1rem; font-weight:800; color:#fff; letter-spacing:-0.01em;">20+ More Simulations</h3>
+        <p style="font-size:0.85rem; color:rgba(255,255,255,0.75); line-height:1.6;">Browse all subjects, filter by branch and year.</p>
+        <a href="/simulations" class="btn" style="background:#fff; color:var(--accent); font-size:12px; padding:10px 20px; min-height:36px;">
+          Explore All →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section>
+  <div class="container">
+    <div class="about-grid">
+      <!-- Visual panel -->
+      <div class="about-visual">
+        <div class="screw screw-tl"></div>
+        <div class="screw screw-tr"></div>
+        <div class="screw screw-bl"></div>
+        <div class="screw screw-br"></div>
+
+        <!-- Section label above grid -->
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+          <div class="vents"><div class="vent"></div><div class="vent"></div><div class="vent"></div></div>
+          <span class="badge">System Stats</span>
+          <div class="led led-yellow"></div>
+        </div>
+
+        <div class="about-stat-grid">
+          <div class="about-stat-card">
+            <span class="about-stat-num">50<span style="color:var(--accent)">+</span></span>
+            <div class="about-stat-lbl">Simulations</div>
+          </div>
+          <div class="about-stat-card">
+            <span class="about-stat-num">8<span style="color:var(--accent)">+</span></span>
+            <div class="about-stat-lbl">Subjects</div>
+          </div>
+          <div class="about-stat-card">
+            <span class="about-stat-num">4</span>
+            <div class="about-stat-lbl">Branches</div>
+          </div>
+          <div class="about-stat-card">
+            <span class="about-stat-num">∞</span>
+            <div class="about-stat-lbl">Free Always</div>
+          </div>
+        </div>
+
+        <!-- Feature tags -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:24px;">
+          <span class="badge">Real-time</span>
+          <span class="badge">Curriculum Aligned</span>
+          <span class="badge">Interactive</span>
+          <span class="badge">No Signup Required</span>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div class="about-body">
+        <span class="section-tag">// about.system</span>
+        <h2 class="section-title" style="margin-bottom:28px;">Engineering Concepts,<br>Reimagined</h2>
+
+        <p>
+          VisualizeIT turns complex engineering topics into clean, interactive visuals — helping students understand faster, deeper, and smarter.
+        </p>
+        <p>
+          No more struggling through dense theory or static diagrams. Every simulation responds in real time to your inputs, letting you develop genuine intuition — not just memorization.
+        </p>
+        <p>
+          Built for the real engineering curriculum. Whether you're revising before exams or exploring a concept for the first time, VisualizeIT moves at your pace.
+        </p>
+
+        <div style="display:flex; gap:14px; margin-top:32px;">
+          <a href="/simulations" class="btn btn-primary">Browse Simulations</a>
+          <a href="/about" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="hiw-section">
+  <div class="container" style="position:relative; z-index:1;">
+    <span class="section-tag">// process.flow</span>
+    <h2 class="section-title" style="color:#fff;">How It Works</h2>
+    <p class="section-sub">Four steps from zero to understood.</p>
+
+    <div class="hiw-steps">
+      <div class="hiw-step">
+        <div class="hiw-num">01</div>
+        <h3 class="hiw-step-title">Choose Your Topic</h3>
+        <p class="hiw-step-desc">Browse simulations by branch, year, or subject. Find exactly what you're studying.</p>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">02</div>
+        <h3 class="hiw-step-title">Adjust Parameters</h3>
+        <p class="hiw-step-desc">Set inputs, change algorithms, configure the simulation to match your test cases.</p>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">03</div>
+        <h3 class="hiw-step-title">Watch It Run</h3>
+        <p class="hiw-step-desc">Animations and dynamic models respond instantly. Complex ideas become obvious.</p>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">04</div>
+        <h3 class="hiw-step-title">Master the Concept</h3>
+        <p class="hiw-step-desc">Experiment, analyze, repeat. Build real intuition through hands-on practice.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CAMPUS + FUNLAB ===== -->
+<section>
+  <div class="container">
+    <span class="section-tag">// explore.more</span>
+    <h2 class="section-title">Beyond Simulations</h2>
+    <p class="section-sub">
+      Campus Explorer and Fun Lab extend your learning beyond the textbook.
+    </p>
+
+    <div class="preview-grid">
+      <!-- Campus -->
+      <div class="preview-card preview-card-campus">
+        <div class="preview-card-bg"></div>
+        <div class="preview-card-icon">🏛️</div>
+
+        <!-- Mini 3D grid visual -->
+        <div style="position:absolute; top:40px; right:40px; width:120px; height:80px; opacity:0.15;">
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px;">
+            <div style="height:20px; background:#4a90d9; border-radius:2px;"></div>
+            <div style="height:30px; background:#357abd; border-radius:2px;"></div>
+            <div style="height:16px; background:#4a90d9; border-radius:2px;"></div>
+            <div style="height:25px; background:#2e6da4; border-radius:2px;"></div>
+            <div style="height:18px; background:#2e6da4; border-radius:2px;"></div>
+            <div style="height:22px; background:#4a90d9; border-radius:2px;"></div>
+            <div style="height:28px; background:#357abd; border-radius:2px;"></div>
+            <div style="height:14px; background:#4a90d9; border-radius:2px;"></div>
+          </div>
+        </div>
+
+        <span class="preview-card-tag">Campus Explorer</span>
+        <h3 class="preview-card-title">Navigate Your College Digitally</h3>
+        <p class="preview-card-desc">Explore your campus through an interactive 3D model. Navigate classrooms, check schedules, access learning materials.</p>
+        <a href="/campus" class="btn btn-primary" style="align-self:flex-start; position:relative; z-index:1;">
+          Explore Campus →
+        </a>
+      </div>
+
+      <!-- Fun Lab -->
+      <div class="preview-card preview-card-funlab">
+        <div class="preview-card-bg"></div>
+        <div class="preview-card-icon">�:️</div>
+
+        <!-- Mini experiment visual -->
+        <div style="position:absolute; top:40px; right:40px; display:flex; align-items:flex-end; gap:6px; opacity:0.15;">
+          <div style="width:8px; height:60px; background:var(--accent); border-radius:4px 4px 0 0;"></div>
+          <div style="width:8px; height:40px; background:#ff8c94; border-radius:4px 4px 0 0;"></div>
+          <div style="width:8px; height:75px; background:var(--accent); border-radius:4px 4px 0 0;"></div>
+          <div style="width:8px; height:30px; background:#ff8c94; border-radius:4px 4px 0 0;"></div>
+          <div style="width:8px; height:55px; background:var(--accent); border-radius:4px 4px 0 0;"></div>
+        </div>
+
+        <span class="preview-card-tag">Fun Lab</span>
+        <h3 class="preview-card-title">Experiments Without Limits</h3>
+        <p class="preview-card-desc">Interactive physics toys, mechanical simulations, and experimental engineering demos. Learn by playing.</p>
+        <a href="/fun-lab" class="btn btn-primary" style="align-self:flex-start; position:relative; z-index:1;">
+          Enter Fun Lab →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <!-- Brand -->
+      <div>
+        <div class="footer-brand-name">
+          <div class="nav-logo-icon" style="width:28px;height:28px;font-size:12px;">V</div>
+          VisualizeIT
+        </div>
+        <p class="footer-brand-desc">
+          Interactive engineering simulations aligned with real curricula. Built for students, by students.
+        </p>
+        <div class="footer-status">
+          <div class="led" style="width:6px;height:6px;"></div>
+          <span>All systems operational</span>
+        </div>
+      </div>
+
+      <!-- Explore -->
+      <div>
+        <div class="footer-col-title">Explore</div>
+        <ul class="footer-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/simulations">Simulations</a></li>
+          <li><a href="/academics">Academics</a></li>
+          <li><a href="/campus">Explore Campus</a></li>
+          <li><a href="/fun-lab">Fun Lab</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div>
+        <div class="footer-col-title">Resources</div>
+        <ul class="footer-links">
+          <li><a href="#">External Simulations</a></li>
+          <li><a href="https://phet.colorado.edu" target="_blank">PhET</a></li>
+          <li><a href="https://visualgo.net" target="_blank">VisuAlgo</a></li>
+          <li><a href="#" target="_blank">Virtual Labs</a></li>
+        </ul>
+      </div>
+
+      <!-- Project -->
+      <div>
+        <div class="footer-col-title">Project</div>
+        <ul class="footer-links">
+          <li><a href="/about">About</a></li>
+          <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          <li><a href="#">Team</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2024 VisualizeIT — Built with precision.</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="vents">
+          <div class="vent" style="background:rgba(255,255,255,0.1);"></div>
+          <div class="vent" style="background:rgba(255,255,255,0.1);"></div>
+          <div class="vent" style="background:rgba(255,255,255,0.1);"></div>
+        </div>
+        <span class="mono" style="font-size:9px; color:rgba(255,255,255,0.15); letter-spacing:0.06em;">VIT-2024-BETA</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ===== Sorting Bars Animation =====
+  const barColors = [
+    '#ff4757', '#ff6b81', '#ff4757', '#a8b1bd',
+    '#a8b1bd', '#ff4757', '#a8b1bd', '#ff6b81',
+    '#a8b1bd', '#ff4757', '#ff6b81', '#a8b1bd',
+  ];
+
+  function renderBars(heights) {
+    const container = document.getElementById('sortBars');
+    if (!container) return;
+    container.innerHTML = heights.map((h, i) =>
+      `<div class="sort-bar" style="height:${h}px; background:${barColors[i % barColors.length]};"></div>`
+    ).join('');
+  }
+
+  // Simulate bubble sort steps
+  const initialArr = [45, 80, 20, 95, 35, 70, 15, 60, 50, 85, 25, 55];
+  let arr = [...initialArr];
+  let step = 0;
+
+  function bubbleSortStep() {
+    const n = arr.length;
+    const i = Math.floor(step / n);
+    const j = step % n;
+
+    if (i < n - 1 && j < n - 1 - i) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        const swapEl = document.getElementById('swapCount');
+        if (swapEl) swapEl.textContent = String(parseInt(swapEl.textContent) + 1).padStart(2, '0');
+      }
+      const cmpEl = document.getElementById('compareCount');
+      if (cmpEl) cmpEl.textContent = String(step).padStart(2, '0');
+    }
+
+    step++;
+    if (step >= n * n) {
+      arr = [...initialArr];
+      step = 0;
+      const swapEl = document.getElementById('swapCount');
+      const cmpEl = document.getElementById('compareCount');
+      if (swapEl) swapEl.textContent = '00';
+      if (cmpEl) cmpEl.textContent = '00';
+    }
+
+    renderBars(arr.map(v => Math.round(v * 1.1)));
+  }
+
+  renderBars(arr.map(v => Math.round(v * 1.1)));
+  setInterval(bubbleSortStep, 400);
+
+  // ===== Scroll-triggered fade-up =====
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.sim-card, .hiw-step, .about-stat-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
