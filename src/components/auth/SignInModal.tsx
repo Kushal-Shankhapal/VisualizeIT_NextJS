@@ -1,7 +1,9 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
 interface SignInModalProps {
@@ -10,7 +12,57 @@ interface SignInModalProps {
 }
 
 export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await signIn('credentials', {
+        email: email.trim(),
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // Auth.js returns the error message from authorize()
+        setError(result.error === 'CredentialsSignin' 
+          ? 'Invalid email or password' 
+          : result.error
+        );
+      } else {
+        onClose();
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    signIn('google', { callbackUrl: '/dashboard' });
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -41,14 +93,72 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
           <h2 className="text-2xl font-sans font-bold text-[var(--text)] mb-2">
             Sign in to VisualizeIT
           </h2>
-          <p className="text-[var(--text-muted)] mb-10 text-sm">
+          <p className="text-[var(--text-muted)] mb-8 text-sm">
             Access your bookmarked simulations and track your quiz progress across all engineering modules.
           </p>
 
+          {/* Email + Password Form */}
+          <form onSubmit={handleCredentialsSignIn} className="w-full space-y-4 text-left">
+            {/* Error Display */}
+            {error && (
+              <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl px-4 py-3 text-sm text-[var(--accent)] font-semibold text-center">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-1.5">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                placeholder="you@example.com"
+                className="w-full bg-[var(--bg)] text-[var(--text)] font-semibold px-4 py-3 rounded-xl border border-[var(--border-light)]/20 shadow-[var(--shadow-recessed)] outline-none focus:border-[var(--accent)]/50 focus:shadow-[0_0_0_2px_rgba(255,71,87,0.1)] transition-all placeholder:text-[var(--text-muted)]/30 text-sm"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-1.5">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                placeholder="Enter your password"
+                className="w-full bg-[var(--bg)] text-[var(--text)] font-semibold px-4 py-3 rounded-xl border border-[var(--border-light)]/20 shadow-[var(--shadow-recessed)] outline-none focus:border-[var(--accent)]/50 focus:shadow-[0_0_0_2px_rgba(255,71,87,0.1)] transition-all placeholder:text-[var(--text-muted)]/30 text-sm"
+                disabled={isLoading}
+              />
+            </div>
+
+            <Button 
+              variant="primary" 
+              type="submit"
+              className="w-full h-12 flex items-center justify-center gap-3 !px-0 text-sm uppercase tracking-widest font-extrabold"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6 w-full">
+            <div className="h-[1px] bg-[var(--border-light)]/20 flex-1" />
+            <span className="text-[10px] font-mono font-bold text-[var(--text-muted)]/50 uppercase tracking-widest shrink-0">
+              or
+            </span>
+            <div className="h-[1px] bg-[var(--border-light)]/20 flex-1" />
+          </div>
+
+          {/* Google Sign In */}
           <Button 
-            variant="primary" 
+            variant="secondary" 
             className="w-full h-12 flex items-center justify-center gap-3 !px-0"
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -59,7 +169,22 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
             Continue with Google
           </Button>
           
-          <div className="mt-8 pt-6 border-t border-[var(--border-light)] w-full">
+          {/* Register Link */}
+          <div className="mt-6 w-full text-center">
+            <p className="text-sm text-[var(--text-muted)]">
+              New here?{' '}
+              <Link 
+                href="/register" 
+                onClick={onClose}
+                className="text-[var(--accent)] font-bold hover:underline"
+              >
+                Create an account →
+              </Link>
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 pt-6 border-t border-[var(--border-light)] w-full">
             <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)]">
               Industrial Grade Education // Secure Access
             </p>

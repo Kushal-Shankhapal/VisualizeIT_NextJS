@@ -1,14 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import BookmarkButton from '@/components/ui/BookmarkButton';
-import QuizModal from '@/components/ui/QuizModal';
 import { useSession } from 'next-auth/react';
-import { supabase } from '@/lib/supabase';
-import quizzesData from '@/data/quizzes.json';
+import Link from 'next/link';
 
 interface Simulation {
   id: string;
@@ -28,31 +26,24 @@ interface Simulation {
 
 interface SimCardProps {
   simulation: Simulation;
+  progressStatus?: 'done' | 'visited' | null;
 }
 
-export default function SimCard({ simulation }: SimCardProps) {
+export default function SimCard({ simulation, progressStatus }: SimCardProps) {
   const { data: session } = useSession();
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
-  
-  const hasQuiz = (quizzesData as any)[simulation.id]?.length > 0;
-
-  const handleOpenSimulation = async () => {
-    window.open(simulation.url, '_blank', 'noopener,noreferrer');
-    
-    if (session?.user?.id) {
-      try {
-        await supabase.from('recent_activity').insert({
-          user_id: session.user.id,
-          simulation_id: simulation.id
-        });
-      } catch (e) {
-        // Silent fail for logging errors
-      }
-    }
-  };
 
   return (
-    <>
+    <div className="relative group">
+      {/* Progress Badge Overlay */}
+      {progressStatus === 'done' && (
+        <div className="absolute -top-2 -right-2 z-30 bg-[#2ed573] text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-[0_0_15px_#2ed57366] animate-in zoom-in duration-300">
+          ✓ DONE
+        </div>
+      )}
+      {progressStatus === 'visited' && (
+        <div className="absolute top-4 left-4 z-30 w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] animate-pulse" title="Visited" />
+      )}
+
       <Card hoverable withVents className="h-full flex flex-col justify-between group !p-6">
         <div>
           {/* Top Row: Meta Badges & Bookmark */}
@@ -89,36 +80,17 @@ export default function SimCard({ simulation }: SimCardProps) {
         </div>
 
         {/* Action Controls */}
-        <div className="flex gap-2.5 mt-auto pt-5 border-t border-[var(--border-light)]/10">
-          <Button 
-            variant="primary" 
-            className="flex-[1.5] text-[10px] uppercase tracking-widest font-extrabold h-11 px-0 shadow-[var(--shadow-card)]"
-            onClick={handleOpenSimulation}
-          >
-            Open Launch →
-          </Button>
-          {hasQuiz && (
+        <div className="mt-auto pt-5 border-t border-[var(--border-light)]/10">
+          <Link href={`/simulations/${simulation.id}`} className="block w-full">
             <Button 
-              variant="secondary" 
-              className="flex-1 text-[10px] uppercase tracking-widest font-extrabold h-11 px-0 shadow-[var(--shadow-recessed)]"
-              onClick={() => setIsQuizOpen(true)}
+              variant="primary" 
+              className="w-full text-[10px] uppercase tracking-widest font-extrabold h-11 px-0 shadow-[var(--shadow-card)]"
             >
-              Quiz
+              Learn & Launch →
             </Button>
-          )}
+          </Link>
         </div>
       </Card>
-
-      {hasQuiz && (
-        <QuizModal 
-          isOpen={isQuizOpen} 
-          onClose={() => setIsQuizOpen(false)} 
-          simulationId={simulation.id}
-          simulationTitle={simulation.title}
-          questions={(quizzesData as any)[simulation.id]}
-          userId={session?.user?.id}
-        />
-      )}
-    </>
+    </div>
   );
 }

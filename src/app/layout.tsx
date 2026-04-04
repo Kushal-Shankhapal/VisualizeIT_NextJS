@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import OnboardingGate from "@/components/auth/OnboardingGate";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -32,13 +33,15 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          <div className="relative z-10 flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <OnboardingGate>
+            <div className="relative z-10 flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </OnboardingGate>
         </AuthProvider>
       </body>
     </html>

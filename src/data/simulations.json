@@ -12,7 +12,14 @@
     "tag": "DSA",
     "emoji": "⚙️",
     "url": "https://kushal-shankhapal.github.io/Sorting_Algorithms_HTML/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Beginner",
+    "learnPoints": [
+      "Understand core sorting logic for 6 major algorithms",
+      "Analyze time and space complexity visually",
+      "Differentiate between stable and unstable sorts",
+      "Learn when to use which sorting algorithm"
+    ]
   },
   {
     "id": "searching",
@@ -27,7 +34,14 @@
     "tag": "DSA",
     "emoji": "🔍",
     "url": "https://mr-shubham-palde.github.io/Searching-VisualizeIT/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Beginner",
+    "learnPoints": [
+      "Master the divide and conquer approach of Binary Search",
+      "Visualize the sequential nature of Linear Search",
+      "Compare search efficiencies on sorted vs unsorted data",
+      "Understand O(log n) vs O(n) performance"
+    ]
   },
   {
     "id": "stack",
@@ -42,7 +56,14 @@
     "tag": "DSA",
     "emoji": "📚",
     "url": "https://mr-shubham-palde.github.io/Stack-VisualizeIT/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Beginner",
+    "learnPoints": [
+      "Understand LIFO (Last In First Out) principle",
+      "Visualize push and pop operations in real-time",
+      "Learn about stack overflow and underflow conditions",
+      "Compare array vs linked list stack implementations"
+    ]
   },
   {
     "id": "queue",
@@ -57,7 +78,14 @@
     "tag": "DSA",
     "emoji": "🔢",
     "url": "https://mr-shubham-palde.github.io/Queue-VisualizeIT/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Beginner",
+    "learnPoints": [
+      "Understand FIFO (First In First Out) principle",
+      "Visualize front and rear pointer movements",
+      "Master enqueue and dequeue operations",
+      "Learn about the limitations of simple queues"
+    ]
   },
   {
     "id": "circular-queue",
@@ -72,7 +100,14 @@
     "tag": "DSA",
     "emoji": "🔄",
     "url": "https://mr-shubham-palde.github.io/Circular-Queue/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Master the modulo arithmetic for wrap-around indices",
+      "Visualize efficient space utilization in circular buffers",
+      "Understand the 'full' vs 'empty' state ambiguity",
+      "Identify real-world use cases for circular queues"
+    ]
   },
   {
     "id": "expression-conversion",
@@ -87,7 +122,14 @@
     "tag": "DSA",
     "emoji": "🔣",
     "url": "https://mr-shubham-palde.github.io/Conversion-Using-Stack-VisualizeIT/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Learn stack applications in expression evaluation",
+      "Visualize operator precedence and associativity logic",
+      "Master the algorithm for infix to postfix conversion",
+      "Understand how compilers parse arithmetic expressions"
+    ]
   },
   {
     "id": "cpu-scheduling",
@@ -102,7 +144,14 @@
     "tag": "OS",
     "emoji": "🖥️",
     "url": "https://yss207.github.io/VIZIT-OS-CPU-SIM/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Compare preemptive vs non-preemptive scheduling",
+      "Understand Gantt chart construction",
+      "Calculate average waiting and turnaround times",
+      "Analyze the 'convoy effect' and starvation issues"
+    ]
   },
   {
     "id": "disk-scheduling",
@@ -117,7 +166,14 @@
     "tag": "OS",
     "emoji": "💾",
     "url": "https://yss207.github.io/VIZIT-OS-DISK-FINALE/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Visualize disk arm movement patterns",
+      "Understand seek time optimization",
+      "Compare directional algorithms like SCAN and LOOK",
+      "Analyze fairness vs efficiency trade-offs"
+    ]
   },
   {
     "id": "page-replacement",
@@ -132,7 +188,14 @@
     "tag": "OS",
     "emoji": "📋",
     "url": "https://yss207.github.io/VIZIT-OS-PAGE-REPLACEMENT-FINAL/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Understand virtual memory and demand paging",
+      "Visualize page fault handling",
+      "Compare hit ratios across different algorithms",
+      "Learn about Belady's Anomaly in FIFO"
+    ]
   },
   {
     "id": "er-diagram",
@@ -147,6 +210,13 @@
     "tag": "DBMS",
     "emoji": "🗄️",
     "url": "https://kushal-shankhapal.github.io/Er-Diagram-Builder-HTML/",
-    "type": "external"
+    "type": "external",
+    "difficulty": "Beginner",
+    "learnPoints": [
+      "Master entity-relationship modeling concepts",
+      "Visualize key constraints and cardinalities",
+      "Learn to design normalized database schemas",
+      "Differentiate between weak and strong entities"
+    ]
   }
 ]

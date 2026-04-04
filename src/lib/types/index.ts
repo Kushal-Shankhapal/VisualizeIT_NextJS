@@ -9,3 +9,16 @@ export interface Simulation {
   emoji: string;
   path: string;
 }
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  display_name: string;
+  college: string;
+  branch: string;
+  year: number;
+  semester: number;
+  division: string;
+  onboarding_completed: boolean;
+  created_at: string;
+}
