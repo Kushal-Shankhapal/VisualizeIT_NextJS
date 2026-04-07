@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getBookmarkStatus, addBookmark, removeBookmark } from '@/app/actions/bookmarks';
 
 interface BookmarkButtonProps {
   simulationId: string;
@@ -12,33 +12,22 @@ interface BookmarkButtonProps {
 export default function BookmarkButton({ simulationId, userId, className = "" }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+  const checkBookmarkStatus = useCallback(async () => {
+    const bookmarked = await getBookmarkStatus(simulationId);
+    setIsBookmarked(bookmarked);
+  }, [simulationId]);
+
   useEffect(() => {
     if (userId) {
       checkBookmarkStatus();
     }
-  }, [userId, simulationId]);
-
-  const checkBookmarkStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('simulation_id', simulationId)
-        .single();
-
-      if (data) setIsBookmarked(true);
-    } catch (e) {
-      // Silent fail if table/row not found
-    }
-  };
+  }, [userId, checkBookmarkStatus]);
 
   const toggleBookmark = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!userId) {
-      // Basic aesthetic notification instead of alert
       const toast = document.createElement('div');
       toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-[var(--dark-panel)] text-white px-6 py-3 rounded-full shadow-[var(--shadow-float)] border border-white/10 z-[200] font-mono text-xs uppercase tracking-widest animate-in slide-in-from-bottom-2 duration-300';
       toast.innerText = 'Sign in to bookmark simulations';
@@ -50,34 +39,26 @@ export default function BookmarkButton({ simulationId, userId, className = "" }:
       return;
     }
 
-    // Optimistic UI
+    // Optimistic UI update
     const previousState = isBookmarked;
     setIsBookmarked(!previousState);
 
-    try {
-      if (previousState) {
-        await supabase
-          .from('bookmarks')
-          .delete()
-          .eq('user_id', userId)
-          .eq('simulation_id', simulationId);
-      } else {
-        await supabase
-          .from('bookmarks')
-          .insert({ user_id: userId, simulation_id: simulationId });
-      }
-    } catch (error) {
-      console.error("Bookmark sync error:", error);
+    const result = previousState
+      ? await removeBookmark(simulationId)
+      : await addBookmark(simulationId);
+
+    if (result.error) {
+      console.error("Bookmark sync error:", result.error);
       setIsBookmarked(previousState); // Rollback
     }
   };
 
   return (
-    <button 
+    <button
       onClick={toggleBookmark}
       className={`p-2 rounded-lg transition-all duration-300 ${
-        isBookmarked 
-          ? 'bg-[var(--accent)] text-white shadow-[var(--shadow-glow)]' 
+        isBookmarked
+          ? 'bg-[var(--accent)] text-white shadow-[var(--shadow-glow)]'
           : 'bg-[var(--bg)] text-[var(--text-muted)] shadow-[var(--shadow-recessed)] hover:text-[var(--text)]'
       } ${className}`}
       title={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
