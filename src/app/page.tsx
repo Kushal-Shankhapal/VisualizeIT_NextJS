@@ -15,7 +15,7 @@ export default function Home() {
       
       {/* Previews Section */}
       <section className="relative z-10 bg-[var(--bg)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <CampusPreview />
             <FunLabPreview />

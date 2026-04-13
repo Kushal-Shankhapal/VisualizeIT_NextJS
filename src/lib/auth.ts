@@ -90,8 +90,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return baseUrl + '/dashboard';
     }
   },
-  pages: {
-    signIn: '/sign-in', // custom sign-in page (optional)
-    error: '/sign-in',  // redirect auth errors to sign-in
-  },
+  // No custom pages — we use the SignInModal component instead
+  // pages: { signIn: '/sign-in' },
 })

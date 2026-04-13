@@ -36,7 +36,7 @@ export default async function SimulationDetailPage({ params }: SimPageProps) {
 
   return (
     <div className="py-24 min-h-screen bg-[var(--bg)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
         
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-12 text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--text-muted)]">

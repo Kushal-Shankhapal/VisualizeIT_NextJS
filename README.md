@@ -1,166 +1,107 @@
-<div align="center">
-  <img src="/public/logo.png" alt="VisualizeIT Logo" width="120" height="120" style="margin-bottom: 20px;" />
-  
-  # 🚀 VisualizeIT 
-  ### *Interactive Engineering Education Reimagined*
-  
-  [![Next.js 16](https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-  [![React 19](https://img.shields.io/badge/React-19.2.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-  [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-  [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
-  [![NextAuth v5](https://img.shields.io/badge/NextAuth-v5_Beta-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://authjs.dev/)
+# 🛰️ VisualizeIT — Engineering Terminal v2.0
 
-  **VisualizeIT** is a high-performance, interactive educational platform designed to bridge the gap between theoretical engineering concepts and practical understanding. Built specifically for the **KBTCOE SE IT 2024 Pattern**, it provides students with a visually rich environment to experiment with complex algorithms and system behaviors.
-
-  [Explore Simulations](#-core-modules) • [Tech Stack](#-tech-stack) • [Installation](#-getting-started) • [Project Structure](#-architecture)
-</div>
+VisualizeIT is a high-performance educational platform designed for KBTCOE engineering students (SE IT 2024 Pattern). It transforms abstract theoretical concepts—like Sorting, CPU Scheduling, and ER Diagramming—into interactive, observable, and measurable digital experiences.
 
 ---
 
-## 🌟 Key Features
+## 🛠️ The Core Engine (Tech Stack)
 
-- **🎯 Curriculum Aligned**: Specifically mapped to the SE IT 2024 Pattern (SPPU) syllabus.
-- **⚡ Interactive Simulations**: Real-time visualizations of DSA, OS Scheduling, and DBMS operations.
-- **🔐 Secure Authentication**: Integrated NextAuth v5 with Supabase for robust user management.
-- **🎨 Modern HUD UI**: A premium, dark-mode "Heads-Up Display" aesthetic using Tailwind CSS 4 and customized design tokens.
-- **📊 Personalized Dashboard**: Tracks user progress, favorite simulations, and academic performance.
-- **🎮 Fun Lab & Campus**: Explorable virtual spaces that gamify the learning experience.
-
----
-
-## 🧩 Core Modules
-
-### 1. 📂 Simulation Vault
-The heart of the platform. A searchable, filterable library of interactive modules categorized by subject, semester (III/IV), and unit. 
-- **Data Structures**: Sorting, Searching, Linked Lists, Trees, and Graphs.
-- **Operating Systems**: CPU Scheduling (FCFS, ROUND ROBIN, SJF), Memory Management.
-- **DBMS**: SQL Query execution visualizers and ER Diagram tools.
-- **Computer Graphics**: Line drawing, Clipping, and Transformation algorithms.
-
-### 2. 🎓 Academics Portal
-A structured view of the curriculum including syllabus breakdowns, lecture notes, and assignment trackers.
-
-### 3. 🧪 Fun Lab
-Experimental zone for high-fidelity interactive tools that go beyond the standard curriculum, encouraging creative engineering.
-
-### 4. 🏢 Virtual Campus
-A conceptual module providing a digital twin experience of the campus environment, integrating social and academic life.
+| Component | Technology |
+|---|---|
+| **Framework** | Next.js 16.1.6 (App Router / Turbopack) |
+| **UI Library** | React 19 |
+| **Styling** | Tailwind CSS 4 (Industrial Neumorphic Design) |
+| **Authentication** | Auth.js v5 (Google OAuth + Email/Password Credentials) |
+| **Database** | Supabase (PostgreSQL) |
+| **Security** | bcryptjs (Password Hashing) & Supabase RLS |
+| **Logic** | TypeScript (Strict Typing) |
 
 ---
 
-## 🛠 Tech Stack
+## 🌐 User Lifecycle & Logic Flow
 
-| Technology | Purpose |
-| :--- | :--- |
-| **Next.js 16.1.6** | Core framework with App Router support. |
-| **React 19** | Modern UI library with Concurrent Mode and Server Components. |
-| **Tailwind CSS 4** | Next-generation CSS utility framework for rapid, high-performance styling. |
-| **Supabase** | Backend-as-a-Service for PostgreSQL database and storage. |
-| **NextAuth v5 (Beta)** | Modern authentication framework with Supabase Adapter. |
-| **TypeScript** | Static typing for enterprise-grade code reliability. |
-| **Framer Motion** | Fluid, spring-based animations for an organic feel. |
+### 1. Unified Access (Auth)
+Users can initialize their session via **Google OAuth** for quick access or create a persistent identity via **Email & Password**. All security is handled via industry-standard hashing protocols.
+
+### 2. Autonomous Onboarding
+First-time users are automatically gated to the **Profile Initialization Terminal**. This collects vital curriculum data:
+*   **Branch**: (IT, CS, Mechanical, etc.)
+*   **Academic Cycle**: (Year & Semester)
+*   **Division**: (For targeted lab activity tracking)
+
+### 3. Simulation Vault (Curriculum Library)
+The library is **context-aware**. It detects your current semester from your profile and auto-filters the simulations relevant to your immediate curriculum (e.g., SE IT Sem III & IV).
+*   **Smart Filter**: Auto-shows DSA, OS, or DBMS modules.
+*   **Override Mode**: Toggle "Show All" to explore the entire engineering catalog.
+
+### 4. Interactive Detail Hubs
+Each module has a dedicated cockpit containing:
+*   **Launch Terminal**: Access the full external interactive visualization.
+*   **Module Objectives**: Clear "What You'll Learn" bullet points.
+*   **Supplemental Resources**: Curated NPTEL lectures, YouTube guides, and Article deep-dives.
+*   **Diagnostic Terminal (Quiz)**: Test your knowledge. Passing with 60%+ marks the module as "Cleared" in your progress.
+
+### 5. User Terminal (Mastery Dashboard)
+A data-driven view of your academic progress:
+*   **Exploration Metrics**: Track visited vs unvisited modules.
+*   **Mastery Index**: Visualize your quiz accuracy and "Cleared" module counts.
+*   **Bookmark Stack**: Quick-access links to your most-used modules.
+*   **Recent Activity Log**: A persistent record of your last 5 simulation cycles.
 
 ---
 
-## 🏗 Architecture
+## 🏗️ Technical Manifest (Folder Structure)
 
 ```text
-visualize-it/
 ├── src/
-│   ├── app/                # Next.js App Router (Pages & API)
-│   │   ├── (auth)/         # Authentication routes
-│   │   ├── dashboard/      # User dashboard logic
-│   │   ├── simulations/    # Interactive module library
-│   │   ├── academics/      # Course-specific content
-│   │   ├── campus/         # Virtual campus experience
-│   │   └── fun-lab/        # Experimental features
-│   ├── components/         # Reusable UI Architecture
-│   │   ├── ui/             # Core design system components
-│   │   ├── home/           # Landing page sections
-│   │   ├── simulations/    # Simulation-specific components
-│   │   └── layout/         # Persistent Navbar & Footer
-│   ├── lib/                # Shared utilities & configurations
-│   │   ├── auth.ts         # NextAuth configuration
-│   │   ├── supabase.ts     # Supabase client init
-│   │   └── types/          # Global TypeScript interfaces
-│   ├── data/               # Local JSON data for simulations/courses
-│   └── assets/             # Static images and icons
-├── public/                 # Globally accessible static files
-├── supabase_setup.sql      # Database schema and table definitions
-├── next.config.ts          # Project configuration
-└── tailwind.config.ts      # Design system & theme tokens
+│   ├── app/                  # Next.js 16 App Router
+│   │   ├── (auth)/           # Register, Sign-in routes
+│   │   ├── simulations/      # Library & [simId] Detail Page
+│   │   ├── profile/          # Dedicated Onboarding Page
+│   │   └── dashboard/        # User Terminal
+│   ├── components/
+│   │   ├── auth/             # OnboardingGate, SignInModal, ProfileForm
+│   │   ├── simulations/      # SimCard, SimDetailTabs
+│   │   └── ui/               # Primary HUD elements (Button, Card, Badge)
+│   ├── lib/                  # Auth configuration & Supabase clients
+│   ├── data/                 # JSON configuration for Sim data and Quizzes
+│   └── proxy.ts              # Next.js 16 Unified Middleware
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Deployment Command Center
 
-### Prerequisites
+### Environment Initialization
+Create a `.env.local` with the following variables:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_secret_role_key
+GOOGLE_CLIENT_ID=your_id
+GOOGLE_CLIENT_SECRET=your_secret
+NEXTAUTH_SECRET=your_secret
+NEXTAUTH_URL=your_url
+```
 
-- Node.js 20+ 
-- npm / pnpm / yarn
-- Supabase account (for database & auth)
+### Local Development
+```bash
+npm install
+npm run dev
+```
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Kushal-Shankhapal/VisualizeIT_NextJS.git
-   cd visualize-it
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Configuration**
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   AUTH_SECRET=your_auth_js_secret
-   ```
-
-4. **Database Setup**
-   Run the provided `supabase_setup.sql` in your Supabase SQL Editor to initialize the required tables.
-
-5. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
-   Open `http://localhost:3000` to see the result.
+### Production Build
+```bash
+npm run build
+```
 
 ---
 
-## 📈 Future Roadmap
-
-- [ ] **AI-Powered Learning**: Integration of LLMs for personalized doubt solving.
-- [ ] **Real-time Collaboration**: Multi-user simulation rooms for collaborative learning.
-- [ ] **3D Campus Map**: Full WebGL implementation of the virtual campus.
-- [ ] **Mobile App**: PWA or React Native companion app.
+## 🛡️ Security Protocol (Data Safety)
+*   **Service Role Logic**: Sensitive data (Passwords/Profiles) is managed via server-only clients, bypassing client-side exploitation risks.
+*   **RLS (Row Level Security)**: Supabase tables are protected by policies that ensure users can only view and modify their *own* bookmarks and activity logs.
+*   **Password Hashing**: Credentials are never stored as plain text, utilizing `bcrypt` for secure authentication.
 
 ---
 
-## 🤝 Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-  Developed with ❤️ by <b>Kushal Shankhapal</b> & Team <br/>
-  <i>Final Year Project - Computer Engineering</i>
-</div>
+**VisualizeIT** — Industrialized Engineering Education // SE IT 2024 Pattern.

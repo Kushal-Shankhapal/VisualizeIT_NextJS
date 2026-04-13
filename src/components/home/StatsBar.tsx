@@ -11,7 +11,7 @@ export default function StatsBar() {
 
   return (
     <section className="relative z-20 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[var(--dark-panel)] rounded-2xl px-6 py-4 shadow-[var(--shadow-card)] border border-[var(--border-dark)]/30 backdrop-blur-md">
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-[var(--border-dark)]/20">

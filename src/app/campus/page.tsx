@@ -9,7 +9,7 @@ export default function CampusPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-24 pb-12 flex flex-col">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mb-8">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 w-full mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <Badge variant="accent" className="mb-4">Spatial Matrix v2.0</Badge>
@@ -32,7 +32,7 @@ export default function CampusPage() {
       </div>
 
       {/* Hero Iframe Section */}
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="relative w-full h-[600px] lg:h-[750px] rounded-[40px] overflow-hidden bg-[var(--dark-panel)] border border-white/5 shadow-[var(--shadow-float)]">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none z-10" />
           
@@ -57,7 +57,7 @@ export default function CampusPage() {
       </div>
 
       {/* Bottom Note */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-12">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 w-full mt-12">
         <div className="flex items-center gap-4 text-[var(--text-muted)] opacity-30 font-mono text-[9px] uppercase tracking-[0.3em] font-bold">
            <div className="h-[1px] bg-current flex-1" />
            Physical Reality: 100% Calibrated

@@ -33,60 +33,51 @@ export default function SimCard({ simulation, progressStatus }: SimCardProps) {
   const { data: session } = useSession();
 
   return (
-    <div className="relative group">
-      {/* Progress Badge Overlay */}
+    <div className="relative group h-full">
+      {/* Progress badge */}
       {progressStatus === 'done' && (
-        <div className="absolute -top-2 -right-2 z-30 bg-[#2ed573] text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-[0_0_15px_#2ed57366] animate-in zoom-in duration-300">
-          ✓ DONE
+        <div className="absolute -top-2.5 -right-2.5 z-30 bg-[var(--green)] text-[var(--green-fg)] text-[9px] font-bold px-2.5 py-0.5 rounded font-mono uppercase tracking-widest shadow-[var(--shadow-glow-green)]">
+          ✓ Done
         </div>
       )}
       {progressStatus === 'visited' && (
-        <div className="absolute top-4 left-4 z-30 w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] animate-pulse" title="Visited" />
+        <div className="absolute top-4 left-4 z-30 w-2 h-2 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] animate-pulse" title="Visited" />
       )}
 
-      <Card hoverable withVents className="h-full flex flex-col justify-between group !p-6">
+      <Card hoverable withVents className="h-full flex flex-col justify-between group-hover:border-[var(--border)]">
         <div>
-          {/* Top Row: Meta Badges & Bookmark */}
+          {/* Meta */}
           <div className="flex items-start justify-between mb-5">
-             <div className="flex flex-col gap-1.5 flex-1">
-                <Badge variant="recessed" className="font-mono text-[9px] w-fit border border-[var(--border-light)]/5">
-                   #{simulation.subjectCode}
-                </Badge>
-                <div className="flex flex-wrap gap-1.5">
-                   <Badge className="text-[8px] px-2 py-0.5 bg-[var(--muted)]/50">
-                      {simulation.unit.toUpperCase()}
-                   </Badge>
-                   <Badge variant="accent" className="text-[8px] px-2 py-0.5 shadow-sm">
-                      SEM {simulation.semester === 3 ? 'III' : 'IV'}
-                   </Badge>
-                </div>
-             </div>
-             <BookmarkButton simulationId={simulation.id} userId={session?.user?.id} className="relative z-20" />
+            <div className="flex flex-col gap-1.5 flex-1">
+              <span className="font-mono text-[9px] text-[var(--accent)]/60 uppercase tracking-widest">#{simulation.subjectCode}</span>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="recessed" className="text-[9px]">{simulation.unit}</Badge>
+                <Badge variant="accent" className="text-[9px]">Sem {simulation.semester}</Badge>
+              </div>
+            </div>
+            <BookmarkButton simulationId={simulation.id} userId={session?.user?.id} className="relative z-20 !p-1.5 !rounded-lg !min-h-0" />
           </div>
 
-          {/* Title & Subject */}
-          <div className="mb-4">
-            <h3 className="text-xl font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors line-clamp-1 tracking-tight">
+          {/* Title */}
+          <div className="mb-3">
+            <h3 className="text-base font-bold text-white group-hover:text-[var(--accent)] transition-colors leading-snug mb-1">
               {simulation.title}
             </h3>
-            <p className="text-[10px] uppercase font-mono font-extrabold text-[var(--text-muted)] tracking-[0.15em] mt-0.5">
+            <p className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-60">
               {simulation.subject}
             </p>
           </div>
 
-          <p className="text-sm font-medium text-[var(--text-muted)] line-clamp-2 mb-6 leading-relaxed">
+          <p className="text-sm text-[var(--text-muted)] line-clamp-2 leading-relaxed mb-5">
             {simulation.description}
           </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="mt-auto pt-5 border-t border-[var(--border-light)]/10">
+        {/* CTA */}
+        <div className="mt-auto pt-4 border-t border-white/[0.05]">
           <Link href={`/simulations/${simulation.id}`} className="block w-full">
-            <Button 
-              variant="primary" 
-              className="w-full text-[10px] uppercase tracking-widest font-extrabold h-11 px-0 shadow-[var(--shadow-card)]"
-            >
-              Learn & Launch →
+            <Button variant="primary" className="w-full text-[11px] h-10">
+              Learn & Launch
             </Button>
           </Link>
         </div>

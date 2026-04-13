@@ -1,38 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  /* Chassis base — everything mounts on this */
-  --bg: #e0e5ec;
-  
-  /* Raised panel surface */
-  --panel: #f0f2f5;
-  
-  /* Recessed / sunken areas */
-  --muted: #d1d9e6;
-  
-  /* Text */
-  --text: #2d3436;
-  --text-muted: #4a5568;
-  
-  /* Safety red — use sparingly, only for CTAs and active states */
-  --accent: #ff4757;
-  --accent-fg: #ffffff;
-  
-  /* Borders */
-  --border: #babecc;
-  --border-light: #ffffff;
-  --border-dark: #a3b1c6;
-  
-  /* Dark panel background */
-  --dark-panel: #2d3436;
+  /* === BACKGROUNDS === */
+  --bg: #050508;
+  --surface: #0A0D14;
+  --surface-2: #0F1320;
 
-  /* Shadow system */
-  --shadow-card: 8px 8px 16px #babecc, -8px -8px 16px #ffffff;
-  --shadow-float: 12px 12px 24px #babecc, -12px -12px 24px #ffffff, inset 1px 1px 0 rgba(255,255,255,0.5);
-  --shadow-pressed: inset 6px 6px 12px #babecc, inset -6px -6px 12px #ffffff;
-  --shadow-recessed: inset 4px 4px 8px #babecc, inset -4px -4px 8px #ffffff;
-  --shadow-glow: 0 0 10px 2px rgba(255, 71, 87, 0.6);
-  --shadow-sharp: 4px 4px 8px rgba(0,0,0,0.15), -1px -1px 1px rgba(255,255,255,0.8);
+  /* === ACCENTS === */
+  --accent: #4D7AFF;           /* Electric Blue — interactive states */
+  --accent-fg: #ffffff;
+  --green: #00FF95;            /* Neon Green — primary CTA only */
+  --green-fg: #050508;
+
+  /* === TEXT === */
+  --text: #ffffff;
+  --text-muted: #B0C4DE;
+
+  /* === BORDERS === */
+  --border: rgba(77, 122, 255, 0.18);
+  --border-subtle: rgba(77, 122, 255, 0.08);
+  --border-strong: rgba(77, 122, 255, 0.35);
+
+  /* === LEGACY ALIASES (kept so old components don't break) === */
+  --panel: var(--surface);
+  --muted: var(--surface-2);
+  --border-light: rgba(255,255,255,0.08);
+  --border-dark: rgba(77, 122, 255, 0.15);
+  --dark-panel: var(--surface);
+  --accent-fg: #ffffff;
+
+  /* === SHADOWS — Dark Neumorphic === */
+  --shadow-card:   0 0 0 1px rgba(77,122,255,0.10), 0 4px 24px rgba(0,0,0,0.55);
+  --shadow-float:  0 0 0 1px rgba(77,122,255,0.20), 0 8px 40px rgba(0,0,0,0.75);
+  --shadow-recessed: inset 0 2px 8px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-pressed: inset 0 3px 10px rgba(0,0,0,0.7);
+  --shadow-glow:   0 0 20px rgba(77,122,255,0.35), 0 0 60px rgba(77,122,255,0.12);
+  --shadow-glow-green: 0 0 20px rgba(0,255,149,0.30), 0 0 60px rgba(0,255,149,0.08);
+  --shadow-sharp:  0 2px 8px rgba(0,0,0,0.4);
 }
 
 @theme {
@@ -40,64 +44,50 @@
   --font-mono: var(--font-jetbrains);
 }
 
+/* Base */
 body {
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-muted);
   font-family: var(--font-inter), sans-serif;
   min-height: 100vh;
-  position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Noise texture on body */
+/* Subtle noise texture — very faint on dark */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0.2;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Global Density & Spacing Refinements */
-section { 
-  padding: 52px 0; 
-}
-.hero { 
-  padding: 44px 0 52px; 
-}
-
-/* Tighter card internals */
-.sim-card { 
-  padding: 20px; 
-}
-.sim-card-desc { 
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Base heading styles */
+/* Headings */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
   letter-spacing: -0.03em;
+  color: var(--text);
 }
 
+/* Sections */
+section {
+  padding: 5rem 0;
+}
+
+/* Blueprint / grid bg used in dark sections */
 .blueprint-grid {
-  background-color: var(--dark-panel);
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(rgba(77,122,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,122,255,0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
-.sim-grid { 
-  gap: 20px; 
-}
-.stats-grid .stat-item { 
-  padding: 10px 16px; 
-}
-
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }

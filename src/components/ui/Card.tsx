@@ -4,47 +4,40 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   hoverable?: boolean;
   withVents?: boolean;
+  accentEdge?: 'left' | 'top' | 'none';
 }
 
-export function Card({ children, className = '', hoverable = false, withVents = false, ...props }: CardProps) {
+export function Card({ children, className = '', hoverable = false, withVents = false, accentEdge = 'left', ...props }: CardProps) {
+  // Build border-radius based on accent edge
+  const radiusMap = {
+    left: 'rounded-r-xl rounded-l-none',
+    top: 'rounded-b-xl rounded-t-none',
+    none: 'rounded-xl',
+  };
+
   return (
-    <div 
+    <div
       className={`
-        relative bg-[var(--bg)] rounded-2xl p-6
-        shadow-[var(--shadow-card)] border border-[var(--border-light)]/20
+        relative bg-[var(--surface)] p-6 overflow-hidden
+        ${radiusMap[accentEdge]}
+        border border-[var(--border-subtle)]
         transition-all duration-300
-        ${hoverable ? 'hover:-translate-y-1 hover:shadow-[var(--shadow-float)]' : ''}
+        ${hoverable ? 'hover:-translate-y-1 hover:border-[var(--border)] hover:shadow-[var(--shadow-float)]' : 'shadow-[var(--shadow-card)]'}
         ${className}
       `}
       {...props}
     >
-      {/* Corner screws: 4 small circles (10px) using radial-gradient */}
-      <div className="absolute top-3 left-3 w-2.5 h-2.5 rounded-full shadow-[var(--shadow-recessed)] bg-[var(--muted)] overflow-hidden">
-        <div className="w-full h-full rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.8),_transparent_50%)]" />
-      </div>
-      <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full shadow-[var(--shadow-recessed)] bg-[var(--muted)] overflow-hidden">
-        <div className="w-full h-full rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.8),_transparent_50%)]" />
-      </div>
-      <div className="absolute bottom-3 left-3 w-2.5 h-2.5 rounded-full shadow-[var(--shadow-recessed)] bg-[var(--muted)] overflow-hidden">
-        <div className="w-full h-full rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.8),_transparent_50%)]" />
-      </div>
-      <div className="absolute bottom-3 right-3 w-2.5 h-2.5 rounded-full shadow-[var(--shadow-recessed)] bg-[var(--muted)] overflow-hidden">
-        <div className="w-full h-full rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.8),_transparent_50%)]" />
-      </div>
-
-      {/* Vent slots if requested */}
-      {withVents && (
-        <div className="absolute top-4 right-10 flex gap-1">
-          <div className="w-[2px] h-[18px] bg-[var(--dark-panel)] rounded-full shadow-[var(--shadow-recessed)] opacity-60" />
-          <div className="w-[2px] h-[18px] bg-[var(--dark-panel)] rounded-full shadow-[var(--shadow-recessed)] opacity-60" />
-          <div className="w-[2px] h-[18px] bg-[var(--dark-panel)] rounded-full shadow-[var(--shadow-recessed)] opacity-60" />
-        </div>
+      {/* Accent rail */}
+      {accentEdge === 'left' && (
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--accent)]" />
+      )}
+      {accentEdge === 'top' && (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-[var(--accent)]" />
       )}
 
-      {/* Content wrapper to stay above background elements */}
       <div className="relative z-10 w-full h-full">
         {children}
       </div>
     </div>
-  )
+  );
 }

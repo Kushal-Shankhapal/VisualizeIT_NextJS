@@ -6,18 +6,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({ variant = 'primary', className = '', children, ...props }: ButtonProps) {
-  const baseStyles = "min-h-[48px] px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center active:translate-y-[2px] active:shadow-[var(--shadow-pressed)]";
-  
+  const baseStyles = "min-h-[44px] px-6 py-2.5 font-bold text-sm transition-all duration-200 flex items-center justify-center active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed rounded-md";
+
   const variants = {
-    primary: "bg-[var(--accent)] text-[var(--accent-fg)] uppercase tracking-[0.04em] shadow-[var(--shadow-glow)] hover:brightness-110 border-none",
-    secondary: "bg-[var(--bg)] text-[var(--text)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-float)] hover:-translate-y-1 border-none",
-    ghost: "bg-transparent text-[var(--text-muted)] hover:text-[var(--text)] border-none",
+    primary: "bg-[var(--green)] text-[var(--green-fg)] uppercase tracking-[0.06em] hover:brightness-110 border-none shadow-[var(--shadow-glow-green)]",
+    secondary: "bg-transparent text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-white",
+    ghost: "bg-transparent text-[var(--text-muted)] hover:text-white border-none",
   };
 
-  const currentVariant = variants[variant] || variants.primary;
-
   return (
-    <button className={`${baseStyles} ${currentVariant} ${className}`} {...props}>
+    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
       {children}
     </button>
   );

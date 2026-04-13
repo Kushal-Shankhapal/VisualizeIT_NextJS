@@ -61,19 +61,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="py-24 bg-[var(--bg)] min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
         
         {/* Header Section */}
         <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <Badge variant="accent" className="mb-4">Internal System Access</Badge>
-            <h1 className="text-4xl lg:text-5xl font-sans text-[var(--text)] font-extrabold tracking-tight mb-2">
-              User <span className="text-[var(--text-muted)] font-normal italic">Terminal</span>
+            <h1 className="text-4xl lg:text-5xl font-sans text-white font-extrabold tracking-tight mb-2">
+              My Dashboard
             </h1>
-            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em]">
-              <span className="text-[var(--text-muted)]">Auth_Status:</span>
-              <span className="text-[#2ed573] font-bold">Verified</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#2ed573] shadow-[0_0_8px_#2ed573] animate-pulse" />
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)] shadow-[0_0_8px_var(--green)]" />
+              <span className="text-[var(--text-muted)]">Signed in as <span className="text-white font-medium">{session.user.email}</span></span>
             </div>
           </div>
 
@@ -81,8 +79,8 @@ export default async function DashboardPage() {
             "use server"
             await signOut({ redirectTo: "/" });
           }}>
-            <Button variant="secondary" type="submit" className="px-8 font-bold uppercase text-[10px] tracking-widest h-11 shadow-[var(--shadow-recessed)]">
-              Terminate_Session
+            <Button variant="secondary" type="submit" className="px-6 h-10 text-sm">
+              Sign Out
             </Button>
           </form>
         </div>
@@ -129,13 +127,13 @@ export default async function DashboardPage() {
               </div>
             </Card>
 
-            <Card className="flex flex-col justify-center items-center text-center !p-8 bg-[var(--dark-panel)] border-[var(--accent)]/10">
-               <span className="font-mono text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4">Mastery_Level</span>
-               <div className="w-24 h-24 rounded-full bg-[var(--bg)] shadow-[var(--shadow-recessed)] flex items-center justify-center border-4 border-[var(--accent)]/20 mb-4 relative">
-                  <div className="absolute inset-0 rounded-full border-4 border-[var(--accent)] border-t-transparent animate-spin duration-[3000ms]" />
-                  <span className="text-3xl font-bold text-[var(--text)]">{Math.round((passedCount/totalSims)*100)}%</span>
+            <Card className="flex flex-col justify-center items-center text-center !p-8">
+               <span className="text-xs text-[var(--text-muted)] mb-4">Mastery Level</span>
+               <div className="w-24 h-24 rounded-full bg-[var(--surface-2)] flex items-center justify-center border border-[var(--border)] mb-4 relative">
+                  <div className="absolute inset-0 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" style={{animationDuration:'3s'}} />
+                  <span className="text-2xl font-bold text-white font-mono">{Math.round((passedCount/totalSims)*100)}%</span>
                </div>
-               <Badge variant="accent" className="text-[9px] px-4 py-1 shadow-[0_0_10px_var(--accent)]">
+               <Badge variant="accent" className="text-[9px] px-3">
                  {passedCount/totalSims >= 0.8 ? 'Advanced' : passedCount/totalSims >= 0.4 ? 'Intermediate' : 'Novice'}
                </Badge>
             </Card>
@@ -144,10 +142,10 @@ export default async function DashboardPage() {
           {/* Section 2: Bookmarks */}
           <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <h3 className="text-2xl font-extrabold text-[var(--text)] tracking-tight uppercase tracking-[0.05em]">Saved Terminal Links</h3>
-              <div className="h-[1px] bg-[var(--border-light)]/10 flex-1" />
+              <h3 className="text-2xl font-extrabold text-white tracking-tight">Saved Modules</h3>
+              <div className="h-px bg-white/[0.06] flex-1" />
               <Link href="/simulations">
-                <Button variant="ghost" className="text-[10px] uppercase font-bold tracking-widest p-0 h-auto hover:text-[var(--accent)]">Open_Library_Module ↗</Button>
+                <Button variant="ghost" className="text-sm p-0 h-auto text-[var(--accent)] hover:text-white">Browse Library ↗</Button>
               </Link>
             </div>
 
@@ -176,8 +174,8 @@ export default async function DashboardPage() {
           {/* Section 3: Recent Activity Log */}
           <div className="max-w-4xl">
             <div className="flex items-center gap-4 mb-8">
-              <h3 className="text-xl font-extrabold text-[var(--text)] tracking-tight uppercase tracking-[0.05em]">Recent Event Log</h3>
-              <div className="h-[1px] bg-[var(--border-light)]/10 flex-1" />
+              <h3 className="text-xl font-extrabold text-white tracking-tight">Recent Activity</h3>
+              <div className="h-px bg-white/[0.06] flex-1" />
             </div>
             <div className="space-y-3">
               {uniqueActivity.length > 0 ? (
@@ -200,19 +198,16 @@ export default async function DashboardPage() {
                             </div>
                          </div>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         {prog?.quiz_passed && (
-                          <div className="hidden sm:flex items-center gap-2 bg-[#2ed573]/10 px-3 py-1.5 rounded-lg border border-[#2ed573]/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#2ed573]" />
-                            <span className="text-[8px] font-mono font-bold text-[#2ed573] uppercase">Mastery_Level_High</span>
-                          </div>
+                          <Badge variant="green" className="hidden sm:flex">Cleared</Badge>
                         )}
                         <Link href={`/simulations/${sim.id}`}>
                           <Button 
-                            variant="ghost" 
-                            className="text-[9px] uppercase font-bold tracking-[0.2em] px-4 h-10 border border-white/5 hover:border-[var(--accent)]/50"
+                            variant="secondary" 
+                            className="text-xs px-4 h-9"
                           >
-                            Re_Launch →
+                            Open Again
                           </Button>
                         </Link>
                       </div>
@@ -220,8 +215,8 @@ export default async function DashboardPage() {
                   );
                 })
               ) : (
-                <div className="py-12 text-center text-white/20 font-mono text-xs uppercase tracking-widest bg-white/5 border border-dashed border-white/5 rounded-2xl">
-                   // No_Recent_Activity_Detected
+                <div className="py-12 text-center text-white/20 text-sm border border-dashed border-white/[0.06] rounded-xl">
+                   No activity recorded yet. Start exploring simulations.
                 </div>
               )}
             </div>

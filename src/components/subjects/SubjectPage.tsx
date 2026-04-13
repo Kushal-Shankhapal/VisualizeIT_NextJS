@@ -17,7 +17,7 @@ export default function SubjectPage({ title, code, semester, description }: Subj
 
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-32 pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
         
         {/* Subject Header */}
         <div className="mb-16 relative">

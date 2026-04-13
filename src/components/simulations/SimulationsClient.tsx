@@ -74,7 +74,7 @@ export default function SimulationsClient({ userProfile, isLoggedIn, progressDat
 
   return (
     <div className="py-32 relative z-10 min-h-screen bg-[var(--bg)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
         
         {/* Header */}
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">

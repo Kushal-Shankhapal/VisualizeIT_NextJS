@@ -77,10 +77,10 @@ export default function SimDetailTabs({ simulationId, questions, userId, initial
   const TabButton = ({ id, label, icon }: { id: typeof activeTab, label: string, icon: string }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex-1 py-4 text-[10px] font-mono font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-b-2 ${
+      className={`flex-1 py-5 text-sm font-bold uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-3 border-b-2 ${
         activeTab === id 
           ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/5' 
-          : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-white/5'
+          : 'border-transparent text-[var(--text-muted)] hover:text-white hover:bg-white/5'
       }`}
     >
       <span>{icon}</span>
@@ -222,8 +222,8 @@ function ResourceSection({ title, items }: { title: string, items: any[] }) {
   if (!items || items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-        <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_5px_var(--accent)]" />
+      <h4 className="text-[13px] font-bold text-[var(--accent)] uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full bg-[var(--accent)] shadow-[0_0_5px_var(--accent)]" />
         {title}
       </h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -236,11 +236,11 @@ function ResourceSection({ title, items }: { title: string, items: any[] }) {
             className="group block p-5 rounded-2xl bg-[var(--bg)] border border-[var(--border-light)]/10 shadow-[var(--shadow-card)] hover:border-[var(--accent)]/30 hover:shadow-[var(--shadow-float)] transition-all"
           >
             <div className="flex justify-between items-start mb-2">
-               <h5 className="font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors leading-tight">{item.title}</h5>
-               {item.free && <Badge className="bg-[#2ed573]/10 text-[#2ed573] text-[8px] border-none">FREE</Badge>}
+               <h5 className="font-bold text-base text-[var(--text)] group-hover:text-[var(--accent)] transition-colors leading-tight">{item.title}</h5>
+               {item.free && <Badge className="bg-[#2ed573]/10 text-[#2ed573] text-[9px] font-bold border-none">FREE</Badge>}
             </div>
-            {item.channel && <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">{item.channel}</p>}
-            <div className="mt-3 text-[10px] text-[var(--accent)] font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {item.channel && <p className="text-xs text-[var(--text-muted)] font-mono uppercase tracking-widest">{item.channel}</p>}
+            <div className="mt-4 text-[11px] text-[var(--accent)] font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               ACCESS RESOURCE ↗
             </div>
           </a>
