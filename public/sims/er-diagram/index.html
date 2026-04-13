@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ER Diagram Builder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="tsparticles"></div>
+
+  <div class="app-container">
+    <header>
+      <h1>ER Diagram Builder</h1>
+    </header>
+
+    <section class="controls">
+      <button id="addEntityBtn">Add Entity</button>
+      <button id="clearBtn">Clear All</button>
+    </section>
+
+    <main class="main-panel">
+      <section class="canvas-area" id="canvasArea"></section>
+      <section class="schema-panel">
+        <h3>Relational Schema</h3>
+        <pre id="ddlOutput"></pre>
+      </section>
+    </main>
+  </div>
+
+ <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <script>
+    tsParticles.load("tsparticles", {
+      background: {
+        color: "#0d0d0d"
+      },
+      particles: {
+        number: { value: 90 },
+        color: { value: "#00ff00" },
+        shape: { type: "circle" },
+        opacity: { value: 0.5 },
+        size: { value: 3 },
+        line_linked: {
+          enable: true,
+          distance: 150,
+          color: "#00ff00",
+          opacity: 0.4,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 2,
+          direction: "none",
+          out_mode: "bounce"
+        }
+      },
+      interactivity: {
+        events: {
+          onhover: { enable: true, mode: ["attract", "grab"] },
+          onclick: { enable: true, mode: "repulse" },
+          resize: true
+        },
+        modes: {
+          connect: {
+            distance: 300,
+            line_linked: {
+              opacity: 0.6
+            }
+          },
+          grab: {
+            distance: 150,
+          }
+        }
+      },
+      retina_detect: true
+    });
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>

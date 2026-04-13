@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Search Visualizer</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="tsparticles"></div>
+
+<div class="app-container">
+
+  <header>
+    <h1>Search Visualizer</h1>
+  </header>
+
+  <!-- ================= CONTROLS ================= -->
+  <section class="controls">
+    <div class="top-controls">
+
+      <label>Algorithm:</label>
+      <select id="algorithmSelect">
+        <option value="linear">Linear Search</option>
+        <option value="binary">Binary Search</option>
+      </select>
+
+      <input type="text" id="arrayInput" placeholder="e.g. 12,45,7,90,34" />
+      <input type="number" id="targetInput" placeholder="Target value" />
+
+      <button id="generateBtn">Random</button>
+      <button id="loadBtn">Load</button>
+
+      <button id="startBtn">▶ Start</button>
+      <button id="stepBtn">⏭ Step</button>
+      <button id="resetBtn">↻ Reset</button>
+
+      <label>Speed:</label>
+      <input type="range" min="400" max="1500" value="800" step="100" id="speedRange" />
+      <span id="speedLabel">2x</span>
+
+    </div>
+  </section>
+
+  <!-- ================= MIDDLE SECTION ================= -->
+  <main class="middle-section">
+
+    <!-- Runtime Summary -->
+    <section class="runtime-summary">
+      <p><strong>Original:</strong> <span id="originalArray">empty</span></p>
+      <p><strong>Step:</strong> <span id="stepDescription">Waiting...</span></p>
+      <p><strong>Result:</strong> <span id="resultOutput">-</span></p>
+    </section>
+
+    <!-- Code Panel -->
+    <section class="code-panel">
+      <div class="code-header">
+        <label>View in:</label>
+        <select id="codeToggle">
+          <option value="pseudo">Pseudocode</option>
+          <option value="python">Python</option>
+          <option value="c">C</option>
+          <option value="cpp">C++</option>
+          <option value="java">Java</option>
+        </select>
+      </div>
+
+      <pre id="codeDisplay"></pre>
+    </section>
+
+  </main>
+
+  <!-- ================= ARRAY VISUALIZATION ================= -->
+  <section class="visual-area" id="arrayContainer"></section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+<script src="script.js" defer></script>
+
+<script>
+tsParticles.load("tsparticles", {
+  background: { color: "#0d0d0d" },
+  particles: {
+    number: { value: 80 },
+    color: { value: "#00ff88" },
+    shape: { type: "circle" },
+    opacity: { value: 0.5 },
+    size: { value: 3 },
+    links: {
+      enable: true,
+      distance: 150,
+      color: "#00ff88",
+      opacity: 0.3,
+      width: 1
+    },
+    move: { enable: true, speed: 2 }
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0d0d0d;
+  color: white;
+}
+
+#tsparticles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.app {
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #00ff88;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+button, input, select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: none;
+}
+
+button {
+  background: #00ff88;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.info {
+  margin-bottom: 15px;
+}
+
+.main-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.visual-section {
+  flex: 2;
+  background: rgba(20,20,20,0.9);
+  padding: 20px;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.list-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.node {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  border: 3px solid #444;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.node.highlight {
+  background: yellow;
+}
+
+.node.found {
+  background: limegreen;
+}
+
+.node .index {
+  font-size: 12px;
+}
+
+.arrow {
+  font-size: 20px;
+  color: #aaa;
+}
+
+.null-node {
+  color: red;
+  font-weight: bold;
+}
+
+.pointer {
+  height: 5px;
+  background: red;
+  margin-top: 5px;
+  width: 75px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.code-section {
+  flex: 1;
+  background: rgba(20,20,20,0.9);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+pre {
+  white-space: pre-wrap;
+  color: #00ff88;
+}

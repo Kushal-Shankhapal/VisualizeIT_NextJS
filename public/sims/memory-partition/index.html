@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memory Partitioning — VisualizeIT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Platypi:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+  :root {
+    --font-heading: 'Platypi', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+  }
+  body, body * {
+    font-family: var(--font-body) !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading) !important;
+  }
+  canvas, pre, code, [class*="mono"], [class*="terminal"], [class*="code"] {
+    font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace !important;
+  }
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #111827;
+    --bg-card: #161d2e;
+    --bg-panel: #1a2236;
+    --border: #1e3a5f;
+    --border-bright: #2563eb;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-orange: #f97316;
+    --accent-amber: #f59e0b;
+    --accent-green: #10b981;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --text-blue: #60a5fa;
+    --blue-glow: rgba(59,130,246,0.15);
+    --cyan-glow: rgba(6,182,212,0.12);
+    --orange-glow: rgba(249,115,22,0.15);
+    --grid-color: rgba(30,58,95,0.4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Blueprint grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAV ─────────────────────────────────── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,17,23,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .nav-brand {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    letter-spacing: 0.15em;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .nav-links a:hover {
+    color: var(--accent-cyan);
+    border-color: var(--border);
+    background: var(--blue-glow);
+  }
+
+  .nav-cta {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: var(--accent-blue);
+    color: #fff;
+    text-decoration: none;
+    padding: 0.4rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent-cyan);
+    transition: all 0.2s;
+  }
+
+  .nav-cta:hover {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 16px rgba(6,182,212,0.3);
+  }
+
+  /* ─── HERO ────────────────────────────────── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .hero-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--accent-cyan);
+    border: 1px solid var(--border-bright);
+    padding: 0.3rem 1rem;
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    background: rgba(59,130,246,0.08);
+    opacity: 0;
+  }
+
+  .hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 7vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 1rem;
+    opacity: 0;
+  }
+
+  .hero-title .word-mem { color: #fff; }
+  .hero-title .word-sep { color: var(--border-bright); margin: 0 0.15em; }
+  .hero-title .word-part { color: var(--accent-cyan); }
+
+  .hero-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    max-width: 560px;
+    margin-bottom: 3rem;
+    opacity: 0;
+  }
+
+  /* Memory address bar animation */
+  .hero-mem-bar {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+
+  .hero-block {
+    height: 44px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: rgba(255,255,255,0.6);
+    overflow: hidden;
+    position: relative;
+    cursor: default;
+    transition: border-color 0.2s;
+  }
+
+  .hero-block:hover { border-color: rgba(255,255,255,0.3); }
+
+  .hb-os    { width: 80px;  background: linear-gradient(135deg, #1e3a5f, #1d4ed8); }
+  .hb-p1    { width: 120px; background: linear-gradient(135deg, #064e3b, #10b981); }
+  .hb-p2    { width: 90px;  background: linear-gradient(135deg, #7c2d12, #f97316); }
+  .hb-frag  { width: 30px;  background: repeating-linear-gradient(45deg, #1c1f26, #1c1f26 4px, #f59e0b22 4px, #f59e0b22 8px); }
+  .hb-free  { width: 110px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); }
+  .hb-p3    { width: 70px;  background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    opacity: 0;
+  }
+
+  .hstat { text-align: center; }
+
+  .hstat-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: block;
+  }
+
+  .hstat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ─── FIX 6: HERO TOOLTIP ─────────────────── */
+  .hero-tooltip-box {
+    position: fixed;
+    z-index: 999;
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 0.4rem 0.65rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-primary);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    line-height: 1.7;
+  }
+  .hero-tooltip-box.visible { opacity: 1; }
+
+  /* ─── SECTION COMMONS ─────────────────────── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 5rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-tag::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent-blue);
+    display: inline-block;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+  }
+
+  .section-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    line-height: 1.8;
+  }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── PHASE 1: WHY MEMORY MGMT ───────────── */
+  .goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .goal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .goal-card:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(59,130,246,0.1);
+  }
+
+  .goal-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent-blue);
+  }
+
+  .goal-card.orange::before { background: var(--accent-orange); }
+  .goal-card.cyan::before   { background: var(--accent-cyan); }
+  .goal-card.green::before  { background: var(--accent-green); }
+
+  /* ─── FIX 1: GOAL ANIMATIONS ─────────────── */
+  .goal-anim {
+    height: 100px;
+    margin-bottom: 0.75rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .goal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #fff;
+    margin-bottom: 0.35rem;
+  }
+
+  .goal-desc {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Memory Hierarchy */
+  .hierarchy-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  .hierarchy-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  .hierarchy-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .hlevel {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .hlevel-bar-wrap {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 0.75rem;
+  }
+
+  .hlevel-bar {
+    height: 36px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .hlevel-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hlevel-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    align-items: flex-end;
+  }
+
+  .hlevel-speed {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+  }
+
+  .hlevel-size {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+  }
+
+  /* ─── PHASE 2: PARTITIONING STRATEGIES ───── */
+  .strategy-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: var(--bg-card);
+  }
+
+  .stab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .stab:last-child { border-right: none; }
+  .stab:hover { color: var(--text-primary); background: rgba(59,130,246,0.05); }
+  .stab.active { color: var(--accent-cyan); background: rgba(6,182,212,0.1); }
+
+  .strategy-panel {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2rem;
+  }
+
+  .strategy-panel.active { display: block; }
+
+  .sp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .sp-explanation h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.75rem;
+  }
+
+  .sp-explanation p {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.85;
+    margin-bottom: 1rem;
+  }
+
+  /* ─── FIX 7: KEY FACT PILLS ───────────────── */
+  .key-fact {
+    display: inline-block;
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.3);
+    color: var(--accent-cyan);
+    font-size: 0.57rem;
+    padding: 0.1rem 0.38rem;
+    border-radius: 2px;
+    margin: 0 0.2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    vertical-align: middle;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  .prop-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .prop-list li {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .prop-list li::before {
+    content: '▸';
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tag-bad  { display: inline-block; background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3); color: var(--accent-orange); font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 2px; margin-left: 0.3rem; }
+  .tag-good { display: inline-block; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--accent-green); font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 2px; margin-left: 0.3rem; }
+
+  /* Memory diagram */
+  .mem-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--bg-panel);
+  }
+
+  .mem-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  .mem-block:last-child { border-bottom: none; }
+
+  .mb-label { color: rgba(255,255,255,0.85); font-weight: 500; position: relative; z-index: 1; }
+  .mb-size  { color: var(--text-muted); position: relative; z-index: 1; }
+  .mb-addr  { color: var(--text-muted); font-size: 0.55rem; position: relative; z-index: 1; }
+
+  .mb-os    { background: linear-gradient(90deg, rgba(29,78,216,0.4), rgba(29,78,216,0.15)); }
+  .mb-p1    { background: linear-gradient(90deg, rgba(16,185,129,0.3), rgba(16,185,129,0.1)); }
+  .mb-p2    { background: linear-gradient(90deg, rgba(249,115,22,0.3), rgba(249,115,22,0.1)); }
+  .mb-p3    { background: linear-gradient(90deg, rgba(124,58,237,0.3), rgba(124,58,237,0.1)); }
+  .mb-frag  {
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(245,158,11,0.05),
+      rgba(245,158,11,0.05) 4px,
+      rgba(245,158,11,0.12) 4px,
+      rgba(245,158,11,0.12) 8px
+    );
+    border-left: 3px solid var(--accent-amber);
+  }
+  .mb-free  { background: rgba(255,255,255,0.02); border-left: 2px dashed rgba(255,255,255,0.15); }
+
+  .mb-frag .mb-label { color: var(--accent-amber); }
+  .mb-free .mb-label { color: var(--text-muted); }
+
+  /* ─── FIX 4: COMPACT BUTTON ───────────────── */
+  .compact-controls {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .compact-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: transparent;
+    color: var(--accent-amber);
+    border: 1px solid rgba(245,158,11,0.45);
+    border-radius: 4px;
+    padding: 0.4rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .compact-btn:hover:not(:disabled) {
+    background: rgba(245,158,11,0.08);
+    border-color: var(--accent-amber);
+    box-shadow: 0 0 12px rgba(245,158,11,0.2);
+  }
+
+  .compact-btn:disabled { opacity: 0.45; cursor: default; }
+
+  .compact-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent-green);
+    display: none;
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── PHASE 3: PLACEMENT ALGORITHMS ─────── */
+  .algo-example {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+
+  /* ─── FIX 2: ALGO INPUTS ──────────────────── */
+  .algo-inputs {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 1.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .aig {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .aig label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .aig-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .aig input[type=number] {
+    width: 66px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.5rem;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .aig input[type=number]::-webkit-outer-spin-button,
+  .aig input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .aig input[type=number]:focus { border-color: var(--accent-blue); }
+
+  .run-algo-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1.4rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    align-self: flex-end;
+  }
+
+  .run-algo-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .algo-no-fit {
+    color: #ef4444;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    display: none;
+    margin-bottom: 0.5rem;
+  }
+
+  .algo-scenario {
+    margin-bottom: 2rem;
+  }
+
+  .algo-scenario h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .scenario-memory {
+    display: flex;
+    gap: 2px;
+    height: 40px;
+    margin-bottom: 0.5rem;
+    background: var(--bg-panel);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .sm-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.7);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .sm-block:last-child { border-right: none; }
+
+  .sm-os   { background: rgba(29,78,216,0.4); flex: 1; }
+  .sm-h1   { background: rgba(255,255,255,0.04); flex: 3; border: 1px dashed rgba(255,255,255,0.15); }
+  .sm-p1   { background: rgba(16,185,129,0.3);  flex: 2; }
+  .sm-h2   { background: rgba(255,255,255,0.04); flex: 2; border: 1px dashed rgba(255,255,255,0.15); }
+  .sm-p2   { background: rgba(249,115,22,0.3);  flex: 1; }
+  .sm-h3   { background: rgba(255,255,255,0.04); flex: 4; border: 1px dashed rgba(255,255,255,0.15); }
+
+  .hole-labels {
+    display: flex;
+    gap: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .hl-spacer { flex: 1; }
+  .hl-h      { flex: 3; text-align: center; color: var(--accent-cyan); }
+  .hl-h2     { flex: 2; text-align: center; color: var(--accent-cyan); }
+  .hl-h3     { flex: 4; text-align: center; color: var(--accent-cyan); }
+  .hl-p      { flex: 2; text-align: center; }
+  .hl-p2     { flex: 1; text-align: center; }
+
+  .algo-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .algo-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    background: var(--bg-panel);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+
+  .algo-card:hover { border-color: var(--accent-blue); }
+
+  .algo-card.winner {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(6,182,212,0.15);
+  }
+
+  .ac-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #fff;
+    margin-bottom: 0.35rem;
+  }
+
+  .ac-picks {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .ac-picks span { color: var(--accent-cyan); }
+
+  .ac-chosen-bar {
+    height: 28px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding: 0 0.6rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    margin-bottom: 0.5rem;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .ac-reason {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .ac-waste {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+  }
+
+  .waste-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── BUDDY SYSTEM VISUALIZER ─────────────── */
+  .buddy-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+
+  /* ─── FIX 3: BUDDY STEP-THROUGH ───────────── */
+  .buddy-step-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .buddy-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 170px;
+    background: var(--bg-panel);
+  }
+
+  .buddy-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .buddy-nav-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.38rem 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .buddy-nav-btn:hover:not(:disabled) { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .buddy-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .buddy-step-counter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--accent-blue);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .buddy-step-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .bs-block {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s;
+  }
+
+  .bs-block:last-child { border-bottom: none; }
+  .bs-block.free  { background: rgba(255,255,255,0.03); color: var(--text-muted); }
+  .bs-block.alloc { color: rgba(255,255,255,0.85); }
+  .bs-block.b1 { background: linear-gradient(90deg, rgba(16,185,129,0.3), rgba(16,185,129,0.15)); }
+  .bs-block.b2 { background: linear-gradient(90deg, rgba(249,115,22,0.3), rgba(249,115,22,0.15)); }
+  .bs-block.b3 { background: linear-gradient(90deg, rgba(124,58,237,0.3), rgba(124,58,237,0.15)); }
+
+  /* ─── FIX 5: WHAT'S NEXT SECTION ─────────── */
+  .next-section {
+    position: relative;
+    z-index: 1;
+    padding: 3rem 2rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .next-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    text-align: center;
+  }
+
+  .next-title span { color: var(--accent-cyan); }
+
+  .next-cards {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .next-card {
+    width: 148px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 0.75rem;
+    text-decoration: none;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+  }
+
+  .next-card:not(.coming-soon):hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(59,130,246,0.1);
+  }
+
+  .next-card.coming-soon {
+    opacity: 0.38;
+    cursor: default;
+  }
+
+  .next-card-arrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--accent-cyan);
+    line-height: 1;
+  }
+
+  .next-card-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+
+  .next-card-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.48rem;
+    letter-spacing: 0.1em;
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--accent-amber);
+    padding: 0.12rem 0.4rem;
+    border-radius: 2px;
+  }
+
+  /* ─── CTA SECTION ─────────────────────────── */
+  .cta-section {
+    position: relative;
+    z-index: 1;
+    padding: 5rem 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(180deg, transparent, rgba(59,130,246,0.04));
+  }
+
+  .cta-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--accent-blue);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .cta-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .cta-desc {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.8;
+  }
+
+  .cta-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff;
+    text-decoration: none;
+    padding: 0.9rem 2.5rem;
+    border-radius: 5px;
+    border: 1px solid var(--accent-cyan);
+    display: inline-block;
+    transition: all 0.3s;
+    box-shadow: 0 0 0 rgba(6,182,212,0);
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 32px rgba(6,182,212,0.3), 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  /* ─── SCROLLBAR ───────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+  /* ─── RESPONSIVE ──────────────────────────── */
+  @media (max-width: 768px) {
+    .sp-grid { grid-template-columns: 1fr; }
+    .algo-cards { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .algo-inputs { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- FIX 6: floating hero tooltip -->
+<div class="hero-tooltip-box" id="hero-tooltip"></div>
+
+<!-- ─── NAV ─────────────────────────────── -->
+<nav>
+  <a href="#" class="nav-brand">VISUALIZE//IT</a>
+  <ul class="nav-links">
+    <li><a href="#why-memory">Why Memory</a></li>
+    <li><a href="#partitioning">Partitioning</a></li>
+    <li><a href="#placement">Placement</a></li>
+    <li><a href="#buddy">Buddy System</a></li>
+  </ul>
+  <a href="memory-simulator.html" class="nav-cta">LAUNCH SIMULATOR ▶</a>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────── -->
+<div class="hero">
+  <div class="hero-badge">UNIT IV · MEMORY MANAGEMENT · OS SYLLABUS</div>
+
+  <h1 class="hero-title">
+    <span class="word-mem">MEMORY</span><span class="word-sep">//</span><span class="word-part">PARTITION</span>
+  </h1>
+
+  <p class="hero-sub">How operating systems carve physical memory into usable regions — and why fragmentation is the price we pay.</p>
+
+  <!-- FIX 6: hero blocks with data attributes for tooltip -->
+  <div class="hero-mem-bar">
+    <div class="hero-block hb-os"   data-label="OS Kernel"  data-size="80KB"  data-type="OS">OS</div>
+    <div class="hero-block hb-p1"   data-label="Process 1"  data-size="120KB" data-type="Process">P1 · 120KB</div>
+    <div class="hero-block hb-p2"   data-label="Process 2"  data-size="90KB"  data-type="Process">P2 · 90KB</div>
+    <div class="hero-block hb-frag" data-label="Fragmented" data-size="30KB"  data-type="Fragmented">▤</div>
+    <div class="hero-block hb-free" data-label="Free Space"  data-size="110KB" data-type="Free">FREE</div>
+    <div class="hero-block hb-p3"   data-label="Process 3"  data-size="70KB"  data-type="Process">P3</div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val" id="stat-util">0%</span><span class="hstat-label">Utilization</span></div>
+    <div class="hstat"><span class="hstat-val" id="stat-frag">0KB</span><span class="hstat-label">Fragmentation</span></div>
+    <div class="hstat"><span class="hstat-val">3</span><span class="hstat-label">Algorithms</span></div>
+    <div class="hstat"><span class="hstat-val">3</span><span class="hstat-label">Strategies</span></div>
+  </div>
+</div>
+
+<!-- ─── PHASE 1: WHY MEMORY? ─────────────── -->
+<section id="why-memory">
+  <div class="reveal">
+    <div class="section-tag">Phase 01</div>
+    <h2 class="section-title">Why Memory Management?</h2>
+    <p class="section-desc">Modern systems run dozens of processes concurrently. The OS must allocate, protect, and reclaim RAM — or everything collapses into chaos.</p>
+  </div>
+
+  <!-- FIX 1: Animated goal cards -->
+  <div class="goals-grid reveal">
+
+    <!-- RELOCATION -->
+    <div class="goal-card">
+      <div class="goal-anim" id="anim-reloc">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;gap:10px;padding:0 12px;">
+          <div style="text-align:center;min-width:66px;">
+            <div style="font-size:0.42rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;margin-bottom:4px;">LOGICAL</div>
+            <div id="ga-r-lbox" style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--accent-blue);background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:3px;padding:3px 7px;">0x1A00</div>
+          </div>
+          <div id="ga-r-arrow" style="display:flex;flex-direction:column;align-items:center;gap:1px;opacity:0.5;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.4rem;color:var(--text-muted);">MMU</div>
+            <div style="font-size:1rem;color:var(--accent-cyan);">→</div>
+          </div>
+          <div style="text-align:center;min-width:66px;">
+            <div style="font-size:0.42rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;margin-bottom:4px;">PHYSICAL</div>
+            <div id="ga-r-pbox" style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--accent-cyan);background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.35);border-radius:3px;padding:3px 7px;">0x3F00</div>
+          </div>
+        </div>
+        <div id="ga-r-pulse" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:55px;height:2px;background:var(--accent-cyan);border-radius:1px;opacity:0.45;"></div>
+      </div>
+      <div class="goal-title">RELOCATION</div>
+      <p class="goal-desc">Logical addresses translate to physical ones transparently at runtime.</p>
+    </div>
+
+    <!-- PROTECTION -->
+    <div class="goal-card orange">
+      <div class="goal-anim" id="anim-prot" style="overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;gap:8px;padding:0 10px;position:relative;">
+          <div style="text-align:center;">
+            <div style="font-size:0.38rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">PROCESS</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.4);border-radius:3px;padding:5px 10px;color:rgba(255,255,255,0.85);">A</div>
+          </div>
+          <!-- animated arrow -->
+          <div id="ga-p-arrow" style="font-size:0.85rem;color:var(--accent-orange);opacity:0.3;">→</div>
+          <!-- barrier -->
+          <div id="ga-p-barrier" style="width:5px;height:50px;background:rgba(249,115,22,0.35);border:1px solid rgba(249,115,22,0.55);border-radius:2px;flex-shrink:0;position:relative;">
+            <div id="ga-p-trap" style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:0.45rem;color:#ef4444;letter-spacing:0.1em;opacity:0;white-space:nowrap;">TRAP</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.38rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">PROCESS</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;background:rgba(249,115,22,0.18);border:1px solid rgba(249,115,22,0.4);border-radius:3px;padding:5px 10px;color:rgba(255,255,255,0.85);">B</div>
+          </div>
+        </div>
+      </div>
+      <div class="goal-title">PROTECTION</div>
+      <p class="goal-desc">Hardware barriers prevent any process from touching another's memory.</p>
+    </div>
+
+    <!-- SHARING -->
+    <div class="goal-card cyan">
+      <div class="goal-anim" id="anim-share">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;gap:6px;padding:0 10px;">
+          <div style="text-align:center;">
+            <div style="font-size:0.38rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">PROC</div>
+            <div id="ga-s-p1" style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.4);border-radius:3px;padding:5px 9px;color:rgba(255,255,255,0.85);">P1</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div id="ga-s-arr1" style="font-size:0.75rem;color:var(--accent-cyan);opacity:0.25;line-height:1;">→</div>
+            <div id="ga-s-arr2" style="font-size:0.75rem;color:var(--accent-cyan);opacity:0.25;line-height:1;transform:scaleY(-1);">→</div>
+          </div>
+          <div id="ga-s-shared" style="text-align:center;">
+            <div style="font-size:0.38rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">SHARED</div>
+            <div id="ga-s-sbox" style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--accent-cyan);background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.4);border-radius:3px;padding:5px 8px;">libc.so</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div id="ga-s-arr3" style="font-size:0.75rem;color:var(--accent-cyan);opacity:0.25;line-height:1;transform:scaleX(-1);">→</div>
+            <div id="ga-s-arr4" style="font-size:0.75rem;color:var(--accent-cyan);opacity:0.25;line-height:1;transform:scaleX(-1) scaleY(-1);">→</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.38rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">PROC</div>
+            <div id="ga-s-p2" style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;background:rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.4);border-radius:3px;padding:5px 9px;color:rgba(255,255,255,0.85);">P2</div>
+          </div>
+        </div>
+      </div>
+      <div class="goal-title">SHARING</div>
+      <p class="goal-desc">Multiple processes share one physical copy of common library code.</p>
+    </div>
+
+    <!-- LOGICAL ORGANIZATION -->
+    <div class="goal-card green">
+      <div class="goal-anim" id="anim-logo">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:5px;padding:8px 14px;">
+          <!-- Segmented logical view -->
+          <div style="display:flex;gap:0;width:100%;height:22px;border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+            <div id="ga-lo-code"  style="flex:3;background:rgba(59,130,246,0.35);display:flex;align-items:center;justify-content:center;font-size:0.44rem;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.7);">CODE</div>
+            <div id="ga-lo-stack" style="flex:2;background:rgba(16,185,129,0.35);display:flex;align-items:center;justify-content:center;font-size:0.44rem;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.7);border-left:1px solid rgba(255,255,255,0.08);">STACK</div>
+            <div id="ga-lo-heap"  style="flex:2;background:rgba(245,158,11,0.35);display:flex;align-items:center;justify-content:center;font-size:0.44rem;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.7);border-left:1px solid rgba(255,255,255,0.08);">HEAP</div>
+          </div>
+          <div style="font-size:0.42rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;">↕ LOGICAL VIEW</div>
+          <div style="display:flex;gap:14px;">
+            <span id="ga-lo-d1" style="font-size:0.6rem;color:var(--accent-green);opacity:0.4;line-height:1;">↓</span>
+            <span id="ga-lo-d2" style="font-size:0.6rem;color:var(--accent-green);opacity:0.4;line-height:1;">↓</span>
+            <span id="ga-lo-d3" style="font-size:0.6rem;color:var(--accent-green);opacity:0.4;line-height:1;">↓</span>
+          </div>
+          <!-- Flat physical view -->
+          <div style="width:100%;height:18px;border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+            <div id="ga-lo-flat" style="height:100%;width:100%;background:linear-gradient(90deg,rgba(6,182,212,0.35),rgba(6,182,212,0.2));display:flex;align-items:center;justify-content:center;font-size:0.43rem;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.55);">PHYSICAL VIEW — FLAT ADDRESS SPACE</div>
+          </div>
+        </div>
+      </div>
+      <div class="goal-title">LOGICAL ORGANIZATION</div>
+      <p class="goal-desc">Segmented logical view maps onto a flat physical address space.</p>
+    </div>
+
+  </div><!-- /goals-grid -->
+
+  <!-- Memory Hierarchy -->
+  <div class="hierarchy-container reveal">
+    <div class="hierarchy-title">// MEMORY HIERARCHY — SPEED vs CAPACITY</div>
+    <div class="hierarchy-levels" id="hierarchy">
+      <div class="hlevel">
+        <div class="hlevel-bar-wrap">
+          <div class="hlevel-bar" id="h-reg" style="width:18%; background:linear-gradient(90deg,rgba(249,115,22,0.6),rgba(249,115,22,0.3));">
+            <span class="hlevel-name">Registers</span>
+          </div>
+        </div>
+        <div class="hlevel-meta">
+          <span class="hlevel-speed">~0.3ns</span>
+          <span class="hlevel-size">&lt; 1KB</span>
+        </div>
+      </div>
+      <div class="hlevel">
+        <div class="hlevel-bar-wrap">
+          <div class="hlevel-bar" id="h-cache" style="width:32%; background:linear-gradient(90deg,rgba(245,158,11,0.5),rgba(245,158,11,0.2));">
+            <span class="hlevel-name">Cache (L1/L2/L3)</span>
+          </div>
+        </div>
+        <div class="hlevel-meta">
+          <span class="hlevel-speed">~1–10ns</span>
+          <span class="hlevel-size">256KB – 32MB</span>
+        </div>
+      </div>
+      <div class="hlevel">
+        <div class="hlevel-bar-wrap">
+          <div class="hlevel-bar" id="h-ram" style="width:60%; background:linear-gradient(90deg,rgba(59,130,246,0.5),rgba(59,130,246,0.2));">
+            <span class="hlevel-name">Main Memory (RAM)</span>
+          </div>
+        </div>
+        <div class="hlevel-meta">
+          <span class="hlevel-speed">~60–100ns</span>
+          <span class="hlevel-size">4GB – 128GB</span>
+        </div>
+      </div>
+      <div class="hlevel">
+        <div class="hlevel-bar-wrap">
+          <div class="hlevel-bar" id="h-disk" style="width:92%; background:linear-gradient(90deg,rgba(6,182,212,0.35),rgba(6,182,212,0.1));">
+            <span class="hlevel-name">Secondary Storage (SSD/HDD)</span>
+          </div>
+        </div>
+        <div class="hlevel-meta">
+          <span class="hlevel-speed">~100μs – 10ms</span>
+          <span class="hlevel-size">256GB – 8TB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PHASE 2: PARTITIONING ─────────────── -->
+<section id="partitioning">
+  <div class="reveal">
+    <div class="section-tag">Phase 02</div>
+    <h2 class="section-title">Partitioning Strategies</h2>
+    <p class="section-desc">Three fundamental approaches to dividing RAM — each with trade-offs between simplicity, efficiency, and fragmentation.</p>
+  </div>
+
+  <div class="strategy-tabs reveal">
+    <button class="stab active" onclick="switchTab(0)">Fixed Partitioning</button>
+    <button class="stab" onclick="switchTab(1)">Dynamic Partitioning</button>
+    <button class="stab" onclick="switchTab(2)">Buddy System</button>
+  </div>
+
+  <!-- Fixed Partitioning — Tab 0 -->
+  <div class="strategy-panel active" id="tab-0">
+    <div class="sp-grid">
+      <!-- FIX 7: max 3 bullets, rest as key-fact pills -->
+      <div class="sp-explanation">
+        <h3>Fixed / Static Partitioning</h3>
+        <p>Memory is divided into a fixed number of partitions at system boot time. Partitions may be equal-sized or of varying sizes. A process must fit into a single partition.
+          <span class="key-fact">partition table in OS</span>
+          <span class="key-fact">max P = num partitions</span>
+        </p>
+        <ul class="prop-list">
+          <li>Simple — no runtime allocation decisions needed</li>
+          <li>Internal fragmentation — wasted space inside a partition<span class="tag-bad">WASTE</span></li>
+          <li>No external fragmentation<span class="tag-good">GOOD</span></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text-muted);letter-spacing:0.15em;margin-bottom:0.75rem;text-transform:uppercase;">// Memory Layout — 512KB Total</div>
+        <div class="mem-diagram" id="fixed-diagram">
+          <div class="mem-block mb-os"   style="height:36px;"><span class="mb-label">OS Kernel</span><span class="mb-size">128KB</span><span class="mb-addr">0x0000</span></div>
+          <div class="mem-block mb-p1"   style="height:56px;"><span class="mb-label">P1 — 90KB</span><span class="mb-size">in 128KB partition</span><span class="mb-addr">0x2000</span></div>
+          <div class="mem-block mb-frag" style="height:20px;"><span class="mb-label">⚠ Wasted — 38KB</span><span class="mb-size">internal frag</span></div>
+          <div class="mem-block mb-p2"   style="height:48px;"><span class="mb-label">P2 — 70KB</span><span class="mb-size">in 128KB partition</span><span class="mb-addr">0x4000</span></div>
+          <div class="mem-block mb-frag" style="height:16px;"><span class="mb-label">⚠ Wasted — 58KB</span><span class="mb-size">internal frag</span></div>
+          <div class="mem-block mb-free" style="height:44px;"><span class="mb-label">FREE</span><span class="mb-size">128KB</span><span class="mb-addr">0x6000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Partitioning — Tab 1 -->
+  <div class="strategy-panel" id="tab-1">
+    <div class="sp-grid">
+      <!-- FIX 7 -->
+      <div class="sp-explanation">
+        <h3>Dynamic / Variable Partitioning</h3>
+        <p>Partitions are created at runtime, sized exactly to the process request. No internal fragmentation — but holes accumulate as processes exit.
+          <span class="key-fact">uses First/Best/Worst Fit</span>
+          <span class="key-fact">holes block large requests</span>
+        </p>
+        <ul class="prop-list">
+          <li>Partitions fit process exactly — no internal waste<span class="tag-good">GOOD</span></li>
+          <li>External fragmentation accumulates over time<span class="tag-bad">PROBLEM</span></li>
+          <li>Compaction can defrag — but it's expensive to run</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text-muted);letter-spacing:0.15em;margin-bottom:0.75rem;text-transform:uppercase;">// After several allocations &amp; deallocations</div>
+        <div class="mem-diagram" id="dyn-diagram">
+          <div class="mem-block mb-os"   style="height:32px;"><span class="mb-label">OS</span><span class="mb-size">64KB</span><span class="mb-addr">0x0000</span></div>
+          <div class="mem-block mb-p1"   style="height:44px;"><span class="mb-label">P1 — active</span><span class="mb-size">96KB</span><span class="mb-addr">0x1000</span></div>
+          <div class="mem-block mb-frag" id="dyn-hole-1" style="height:16px;"><span class="mb-label">▣ Hole — 32KB</span><span class="mb-size">ext. frag</span></div>
+          <div class="mem-block mb-p2"   style="height:36px;"><span class="mb-label">P2 — active</span><span class="mb-size">80KB</span><span class="mb-addr">0x3000</span></div>
+          <div class="mem-block mb-frag" id="dyn-hole-2" style="height:12px;"><span class="mb-label">▣ Hole — 24KB</span><span class="mb-size">ext. frag</span></div>
+          <div class="mem-block mb-p3"   style="height:44px;"><span class="mb-label">P3 — active</span><span class="mb-size">112KB</span><span class="mb-addr">0x5000</span></div>
+          <div class="mem-block mb-free" id="dyn-free"   style="height:36px;"><span class="mb-label">FREE</span><span class="mb-size">104KB</span><span class="mb-addr">0x7000</span></div>
+        </div>
+        <!-- FIX 4: Compact button -->
+        <div class="compact-controls">
+          <button class="compact-btn" id="compact-btn" onclick="runCompaction()">COMPACT</button>
+          <span class="compact-status" id="compact-status"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buddy System — Tab 2 -->
+  <div class="strategy-panel" id="tab-2">
+    <!-- FIX 7 -->
+    <div class="sp-explanation" style="margin-bottom:1.5rem;">
+      <h3>Buddy System</h3>
+      <p>Memory is always allocated in power-of-2 sized blocks. When a block is freed, it checks if its "buddy" is also free — if so, they merge back into a larger block. Elegant recursion.
+        <span class="key-fact">used by Linux kernel</span>
+        <span class="key-fact">256KB → 128KB + 128KB</span>
+      </p>
+      <ul class="prop-list">
+        <li>Fast allocation — binary tree structure<span class="tag-good">FAST</span></li>
+        <li>Internal fragmentation — process gets next power-of-2<span class="tag-bad">WASTE</span></li>
+        <li>Easy coalescing — buddies merge automatically</li>
+      </ul>
+    </div>
+
+    <!-- FIX 3: Step-through buddy animation -->
+    <div id="buddy-anim-container">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text-muted);letter-spacing:0.15em;margin-bottom:1rem;text-transform:uppercase;">// Interactive — use Prev / Next to step through allocation &amp; deallocation</div>
+      <div class="buddy-step-container">
+        <div class="buddy-display" id="buddy-display"></div>
+        <div class="buddy-nav-row">
+          <button class="buddy-nav-btn" id="buddy-prev-btn" disabled>← Prev</button>
+          <div class="buddy-step-label" id="buddy-step-label"></div>
+          <span class="buddy-step-counter" id="buddy-step-counter">Step 1 / 5</span>
+          <button class="buddy-nav-btn" id="buddy-next-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PHASE 3: PLACEMENT ALGORITHMS ────── -->
+<section id="placement">
+  <div class="reveal">
+    <div class="section-tag">Phase 03</div>
+    <h2 class="section-title">Placement Algorithms</h2>
+    <p class="section-desc">When a new process arrives, which free hole does it go into? Three algorithms, same memory state, different choices.</p>
+  </div>
+
+  <div class="algo-example reveal">
+
+    <!-- FIX 2: Interactive inputs -->
+    <div class="algo-inputs">
+      <div class="aig">
+        <label>Hole Sizes (KB)</label>
+        <div class="aig-row">
+          <input type="number" id="h1-size" value="100" min="1" placeholder="H1">
+          <input type="number" id="h2-size" value="50"  min="1" placeholder="H2">
+          <input type="number" id="h3-size" value="200" min="1" placeholder="H3">
+        </div>
+      </div>
+      <div class="aig">
+        <label>Process Request (KB)</label>
+        <input type="number" id="req-size" value="40" min="1">
+      </div>
+      <button class="run-algo-btn" onclick="runAlgorithms()">RUN ALGORITHMS</button>
+    </div>
+
+    <div class="algo-scenario">
+      <h4 id="algo-scenario-title">// Scenario: Memory with 3 holes — Process P requests 40KB</h4>
+      <div class="scenario-memory" id="scenario-memory">
+        <div class="sm-block sm-os">OS</div>
+        <div class="sm-block sm-h1" id="sm-h1">HOLE 1<br>100KB</div>
+        <div class="sm-block sm-p1">P·60KB</div>
+        <div class="sm-block sm-h2" id="sm-h2">HOLE 2<br>50KB</div>
+        <div class="sm-block sm-p2">P·20KB</div>
+        <div class="sm-block sm-h3" id="sm-h3">HOLE 3<br>200KB</div>
+      </div>
+      <div class="hole-labels">
+        <div class="hl-spacer"></div>
+        <div class="hl-h" id="hl-h1">H1 = 100KB</div>
+        <div class="hl-p">P1</div>
+        <div class="hl-h2" id="hl-h2">H2 = 50KB</div>
+        <div class="hl-p2">P2</div>
+        <div class="hl-h3" id="hl-h3">H3 = 200KB</div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--accent-amber);border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.06);padding:0.5rem 0.75rem;border-radius:4px;" id="algo-req-text">
+        → New process P needs 40KB. Which hole is chosen?
+      </div>
+    </div>
+
+    <div class="algo-cards">
+      <!-- First Fit -->
+      <div class="algo-card" id="ff-card">
+        <div class="ac-name">First Fit</div>
+        <div class="ac-picks">Scans from start → picks <span>first hole that fits</span></div>
+        <div class="algo-no-fit" id="ff-nofit">✕ NO FIT</div>
+        <div class="ac-chosen-bar" id="ff-bar" style="background:linear-gradient(90deg,rgba(16,185,129,0.4),rgba(16,185,129,0.15));color:#fff;">
+          H1 chosen — 100KB ✓
+        </div>
+        <div class="ac-reason" id="ff-reason">Stops at H1 (100KB ≥ 40KB). Fast — minimal scan. Leaves a 60KB remnant in H1.</div>
+        <div class="ac-waste">
+          <div class="waste-dot" style="background:var(--accent-green);"></div>
+          <span id="ff-waste" style="color:var(--text-secondary);font-size:0.6rem;">Remnant: 60KB · Speed: Fast</span>
+        </div>
+      </div>
+      <!-- Best Fit -->
+      <div class="algo-card winner" id="bf-card">
+        <div class="ac-name">Best Fit</div>
+        <div class="ac-picks">Scans all holes → picks <span>smallest hole that fits</span></div>
+        <div class="algo-no-fit" id="bf-nofit">✕ NO FIT</div>
+        <div class="ac-chosen-bar" id="bf-bar" style="background:linear-gradient(90deg,rgba(6,182,212,0.4),rgba(6,182,212,0.15));color:#fff;">
+          H2 chosen — 50KB ✓
+        </div>
+        <div class="ac-reason" id="bf-reason">H2 (50KB) is the tightest fit for 40KB. Leaves smallest remnant (10KB). Better utilization, slower search.</div>
+        <div class="ac-waste">
+          <div class="waste-dot" style="background:var(--accent-cyan);"></div>
+          <span id="bf-waste" style="color:var(--text-secondary);font-size:0.6rem;">Remnant: 10KB · Speed: Slow</span>
+        </div>
+      </div>
+      <!-- Worst Fit -->
+      <div class="algo-card" id="wf-card">
+        <div class="ac-name">Worst Fit</div>
+        <div class="ac-picks">Scans all holes → picks <span>largest hole</span></div>
+        <div class="algo-no-fit" id="wf-nofit">✕ NO FIT</div>
+        <div class="ac-chosen-bar" id="wf-bar" style="background:linear-gradient(90deg,rgba(249,115,22,0.4),rgba(249,115,22,0.15));color:#fff;">
+          H3 chosen — 200KB ✓
+        </div>
+        <div class="ac-reason" id="wf-reason">H3 (200KB) is largest. Leaves 160KB — biggest remnant, possibly useful for future requests. Counterintuitive strategy.</div>
+        <div class="ac-waste">
+          <div class="waste-dot" style="background:var(--accent-orange);"></div>
+          <span id="wf-waste" style="color:var(--text-secondary);font-size:0.6rem;">Remnant: 160KB · Speed: Slow</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FIX 5: What's Next section -->
+<div class="next-section reveal">
+  <div class="next-title">// This module covers <span>Unit IV — Memory Partitioning</span></div>
+  <div class="next-cards">
+    <a href="#" class="next-card">
+      <div class="next-card-arrow">←</div>
+      <div class="next-card-name">Deadlock</div>
+    </a>
+    <a href="memory-simulator.html" class="next-card">
+      <div class="next-card-arrow">→</div>
+      <div class="next-card-name">Paging &amp; Page Replacement</div>
+    </a>
+    <div class="next-card coming-soon">
+      <div class="next-card-arrow">→</div>
+      <div class="next-card-name">Segmentation</div>
+      <div class="next-card-badge">COMING SOON</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CTA ───────────────────────────────── -->
+<div class="cta-section">
+  <p class="cta-eyebrow">// Simulator ready</p>
+  <h2 class="cta-title">Build. Allocate. Fragment. Compact.</h2>
+  <p class="cta-desc">Load a preset or define your own memory layout. Watch fragmentation accumulate in real-time. Switch algorithms. Run compaction.</p>
+  <a href="memory-simulator.html" class="cta-btn">LAUNCH MEMORY SIMULATOR ▶</a>
+</div>
+
+<script>
+// ─── HERO ANIMATIONS ──────────────────────
+anime({
+  targets: '.hero-badge',
+  opacity: [0, 1],
+  translateY: [-10, 0],
+  duration: 600,
+  easing: 'easeOutExpo',
+  delay: 200
+});
+
+anime({
+  targets: '.hero-title',
+  opacity: [0, 1],
+  translateY: [20, 0],
+  duration: 800,
+  easing: 'easeOutExpo',
+  delay: 400
+});
+
+anime({
+  targets: '.hero-sub',
+  opacity: [0, 1],
+  translateY: [20, 0],
+  duration: 700,
+  easing: 'easeOutExpo',
+  delay: 600
+});
+
+anime({
+  targets: '.hero-mem-bar',
+  opacity: [0, 1],
+  scaleX: [0.4, 1],
+  duration: 900,
+  easing: 'easeOutExpo',
+  delay: 800
+});
+
+anime({
+  targets: '.hero-stats',
+  opacity: [0, 1],
+  translateY: [10, 0],
+  duration: 600,
+  easing: 'easeOutExpo',
+  delay: 1100
+});
+
+// Animate stat counters
+function animateCount(el, target, suffix, decimals) {
+  decimals = decimals || 0;
+  var obj = { val: 0 };
+  anime({
+    targets: obj,
+    val: target,
+    duration: 1800,
+    easing: 'easeOutExpo',
+    delay: 1200,
+    update: function() {
+      el.textContent = obj.val.toFixed(decimals) + suffix;
+    }
+  });
+}
+
+animateCount(document.getElementById('stat-util'), 68, '%');
+animateCount(document.getElementById('stat-frag'), 96, 'KB');
+
+// ─── FIX 6: HERO TOOLTIP ─────────────────
+var heroTooltip = document.getElementById('hero-tooltip');
+document.querySelectorAll('.hero-block[data-label]').forEach(function(block) {
+  block.addEventListener('mouseenter', function() {
+    var label = block.dataset.label;
+    var size  = block.dataset.size;
+    var type  = block.dataset.type;
+    heroTooltip.innerHTML =
+      '<span style="color:#fff;font-weight:600;">' + label + '</span><br>' +
+      '<span style="color:var(--text-muted);">Size: </span>' + size + '<br>' +
+      '<span style="color:var(--text-muted);">Type: </span>' + type;
+    heroTooltip.classList.add('visible');
+  });
+  block.addEventListener('mousemove', function(e) {
+    heroTooltip.style.left = (e.clientX + 14) + 'px';
+    heroTooltip.style.top  = (e.clientY - 6)  + 'px';
+  });
+  block.addEventListener('mouseleave', function() {
+    heroTooltip.classList.remove('visible');
+  });
+});
+
+// Amber pulse on frag block
+anime({
+  targets: '.hb-frag',
+  boxShadow: [
+    '0 0 0px rgba(245,158,11,0)',
+    '0 0 8px rgba(245,158,11,0.75)'
+  ],
+  duration: 1500,
+  easing: 'easeInOutSine',
+  direction: 'alternate',
+  loop: true
+});
+
+// ─── SCROLL REVEAL ───────────────────────
+var reveals = document.querySelectorAll('.reveal');
+var revealObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(function(r) { revealObserver.observe(r); });
+
+// ─── HIERARCHY BARS ──────────────────────
+var hierObserver = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting) {
+    anime({
+      targets: '.hlevel-bar',
+      scaleX: [0, 1],
+      duration: 800,
+      delay: anime.stagger(150, { start: 200 }),
+      easing: 'easeOutExpo'
+    });
+    hierObserver.disconnect();
+  }
+}, { threshold: 0.2 });
+hierObserver.observe(document.getElementById('hierarchy'));
+
+// ─── FIXED DIAGRAM ANIMATE ───────────────
+var fixedObserver = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting) {
+    anime({
+      targets: '#fixed-diagram .mem-block',
+      opacity: [0, 1],
+      translateX: [20, 0],
+      delay: anime.stagger(120),
+      duration: 500,
+      easing: 'easeOutExpo'
+    });
+    fixedObserver.disconnect();
+  }
+}, { threshold: 0.2 });
+fixedObserver.observe(document.getElementById('fixed-diagram'));
+
+// ─── PLACEMENT ALGO BARS ─────────────────
+var algoObserver = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting) {
+    anime({
+      targets: '.ac-chosen-bar',
+      scaleX: [0, 1],
+      duration: 700,
+      delay: anime.stagger(180, { start: 200 }),
+      easing: 'easeOutExpo'
+    });
+    algoObserver.disconnect();
+  }
+}, { threshold: 0.2 });
+algoObserver.observe(document.getElementById('ff-card'));
+
+// ─── TAB SWITCHING ───────────────────────
+function switchTab(idx) {
+  document.querySelectorAll('.stab').forEach(function(t, i) {
+    t.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.strategy-panel').forEach(function(p, i) {
+    p.classList.toggle('active', i === idx);
+  });
+
+  if (idx === 0) {
+    anime({
+      targets: '#fixed-diagram .mem-block',
+      opacity: [0, 1],
+      translateX: [15, 0],
+      delay: anime.stagger(80),
+      duration: 400,
+      easing: 'easeOutExpo'
+    });
+  } else if (idx === 1) {
+    anime({
+      targets: '#dyn-diagram .mem-block',
+      opacity: [0, 1],
+      translateX: [15, 0],
+      delay: anime.stagger(80),
+      duration: 400,
+      easing: 'easeOutExpo'
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+// FIX 1: GOAL CARD LOOPING ANIMATIONS
+// ═══════════════════════════════════════════
+
+// Start animations when goals grid enters view
+var goalAnimStarted = false;
+var goalObserver = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting && !goalAnimStarted) {
+    goalAnimStarted = true;
+    goalObserver.disconnect();
+    setTimeout(function() {
+      startRelocAnim();
+      startProtAnim();
+      startShareAnim();
+      startLogoAnim();
+    }, 400);
+  }
+}, { threshold: 0.2 });
+goalObserver.observe(document.querySelector('.goals-grid'));
+
+// RELOCATION: arrow pulses, physical address glows
+function startRelocAnim() {
+  var arrow = document.getElementById('ga-r-arrow');
+  var pbox  = document.getElementById('ga-r-pbox');
+  var pulse = document.getElementById('ga-r-pulse');
+  if (!arrow) return;
+
+  anime({
+    targets: arrow,
+    opacity: [0.5, 1],
+    scaleX: [0.85, 1.25],
+    duration: 1250,
+    easing: 'easeInOutSine',
+    direction: 'alternate',
+    loop: true
+  });
+
+  anime({
+    targets: pbox,
+    borderColor: ['rgba(6,182,212,0.35)', 'rgba(6,182,212,1)'],
+    boxShadow: ['0 0 0px rgba(6,182,212,0)', '0 0 6px rgba(6,182,212,0.6)'],
+    duration: 1250,
+    easing: 'easeInOutSine',
+    direction: 'alternate',
+    loop: true,
+    delay: 350
+  });
+
+  anime({
+    targets: pulse,
+    width: ['55px', '85px'],
+    opacity: [0.45, 0.9],
+    duration: 1250,
+    easing: 'easeInOutSine',
+    direction: 'alternate',
+    loop: true,
+    delay: 150
+  });
+}
+
+// PROTECTION: arrow tries to cross barrier, bounces, barrier flashes red
+function startProtAnim() {
+  var arrow   = document.getElementById('ga-p-arrow');
+  var barrier = document.getElementById('ga-p-barrier');
+  var trap    = document.getElementById('ga-p-trap');
+  if (!arrow) return;
+
+  var protRunning = true;
+  function protCycle() {
+    if (!protRunning) return;
+    anime.timeline({ easing: 'easeInOutQuad' })
+      .add({ targets: arrow, translateX: [0, 16], opacity: [0.3, 1], duration: 380 })
+      .add({
+        targets: barrier,
+        background: ['rgba(249,115,22,0.35)', 'rgba(239,68,68,0.6)'],
+        borderColor: ['rgba(249,115,22,0.55)', 'rgba(239,68,68,0.9)'],
+        boxShadow: ['0 0 0px #ef4444', '0 0 8px rgba(239,68,68,0.7)'],
+        duration: 160
+      }, '-=80')
+      .add({ targets: trap, opacity: [0, 1], duration: 150 }, '-=60')
+      .add({ targets: arrow, translateX: [16, -4], opacity: [1, 0.4], duration: 300 }, '+=60')
+      .add({
+        targets: barrier,
+        background: 'rgba(249,115,22,0.35)',
+        borderColor: 'rgba(249,115,22,0.55)',
+        boxShadow: '0 0 0px #ef4444',
+        duration: 280
+      }, '-=180')
+      .add({ targets: trap, opacity: 0, duration: 200 }, '-=200')
+      .add({ targets: arrow, translateX: 0, opacity: 0.3, duration: 280 }, '-=100')
+      .finished.then(function() {
+        setTimeout(protCycle, 900);
+      });
+  }
+  protCycle();
+}
+
+// SHARING: P1 accesses, P2 accesses, then both simultaneously
+function startShareAnim() {
+  var arr1  = document.getElementById('ga-s-arr1');
+  var arr2  = document.getElementById('ga-s-arr2');
+  var arr3  = document.getElementById('ga-s-arr3');
+  var arr4  = document.getElementById('ga-s-arr4');
+  var sbox  = document.getElementById('ga-s-sbox');
+  var p1    = document.getElementById('ga-s-p1');
+  var p2    = document.getElementById('ga-s-p2');
+  if (!arr1) return;
+
+  function shareCycle() {
+    anime.timeline({ easing: 'easeInOutSine' })
+      // P1 accesses
+      .add({ targets: [arr1, arr2], opacity: [0.25, 1], duration: 300 })
+      .add({ targets: p1, borderColor: ['rgba(16,185,129,0.4)', 'rgba(16,185,129,0.9)'], duration: 200 }, '-=100')
+      .add({ targets: sbox, borderColor: ['rgba(6,182,212,0.4)', 'rgba(6,182,212,1)'], background: ['rgba(6,182,212,0.12)', 'rgba(6,182,212,0.3)'], duration: 200 }, '-=100')
+      .add({ targets: [arr1, arr2, p1, sbox], opacity: [null, null], duration: 280 }, '+=350')
+      .add({ targets: [p1], borderColor: 'rgba(16,185,129,0.4)', duration: 200 }, '-=150')
+      .add({ targets: sbox, borderColor: 'rgba(6,182,212,0.4)', background: 'rgba(6,182,212,0.12)', duration: 200 }, '-=200')
+      .add({ targets: [arr1, arr2], opacity: 0.25, duration: 250 }, '-=150')
+      // P2 accesses
+      .add({ targets: [arr3, arr4], opacity: [0.25, 1], duration: 300 }, '+=150')
+      .add({ targets: p2, borderColor: ['rgba(124,58,237,0.4)', 'rgba(124,58,237,0.9)'], duration: 200 }, '-=100')
+      .add({ targets: sbox, borderColor: ['rgba(6,182,212,0.4)', 'rgba(6,182,212,1)'], background: ['rgba(6,182,212,0.12)', 'rgba(6,182,212,0.3)'], duration: 200 }, '-=100')
+      .add({ targets: [arr3, arr4, p2, sbox], opacity: [null, null], duration: 280 }, '+=350')
+      .add({ targets: p2, borderColor: 'rgba(124,58,237,0.4)', duration: 200 }, '-=150')
+      .add({ targets: sbox, borderColor: 'rgba(6,182,212,0.4)', background: 'rgba(6,182,212,0.12)', duration: 200 }, '-=200')
+      .add({ targets: [arr3, arr4], opacity: 0.25, duration: 250 }, '-=150')
+      // Both simultaneously
+      .add({ targets: [arr1, arr2, arr3, arr4], opacity: [0.25, 1], duration: 350 }, '+=200')
+      .add({ targets: [p1, p2], borderColor: 'rgba(6,182,212,0.9)', duration: 250 }, '-=200')
+      .add({ targets: sbox, borderColor: 'rgba(6,182,212,1)', background: 'rgba(6,182,212,0.35)', boxShadow: '0 0 8px rgba(6,182,212,0.4)', duration: 250 }, '-=200')
+      .add({ targets: [arr1, arr2, arr3, arr4, p1, p2, sbox], opacity: [null, null], duration: 350 }, '+=450')
+      .add({ targets: [p1], borderColor: 'rgba(16,185,129,0.4)', duration: 200 }, '-=200')
+      .add({ targets: [p2], borderColor: 'rgba(124,58,237,0.4)', duration: 200 }, '-=200')
+      .add({ targets: sbox, borderColor: 'rgba(6,182,212,0.4)', background: 'rgba(6,182,212,0.12)', boxShadow: 'none', duration: 200 }, '-=200')
+      .add({ targets: [arr1, arr2, arr3, arr4], opacity: 0.25, duration: 250 }, '-=150')
+      .finished.then(function() {
+        setTimeout(shareCycle, 600);
+      });
+  }
+  shareCycle();
+}
+
+// LOGICAL ORGANIZATION: segments pulse in sequence, flat bar responds
+function startLogoAnim() {
+  var code  = document.getElementById('ga-lo-code');
+  var stack = document.getElementById('ga-lo-stack');
+  var heap  = document.getElementById('ga-lo-heap');
+  var flat  = document.getElementById('ga-lo-flat');
+  var d1    = document.getElementById('ga-lo-d1');
+  var d2    = document.getElementById('ga-lo-d2');
+  var d3    = document.getElementById('ga-lo-d3');
+  if (!code) return;
+
+  function logoCycle() {
+    anime.timeline({ easing: 'easeInOutSine' })
+      .add({ targets: code, opacity: [0.7, 1], background: ['rgba(59,130,246,0.35)', 'rgba(59,130,246,0.7)'], duration: 300 })
+      .add({ targets: d1, opacity: [0.4, 1], duration: 200 }, '-=100')
+      .add({ targets: flat, opacity: [0.7, 1], duration: 200 }, '-=100')
+      .add({ targets: [code, d1], opacity: [null, null], duration: 250 }, '+=200')
+      .add({ targets: code, background: 'rgba(59,130,246,0.35)', duration: 200 }, '-=150')
+      .add({ targets: d1, opacity: 0.4, duration: 200 }, '-=150')
+
+      .add({ targets: stack, opacity: [0.7, 1], background: ['rgba(16,185,129,0.35)', 'rgba(16,185,129,0.7)'], duration: 300 }, '+=100')
+      .add({ targets: d2, opacity: [0.4, 1], duration: 200 }, '-=100')
+      .add({ targets: [stack, d2], opacity: [null, null], duration: 250 }, '+=200')
+      .add({ targets: stack, background: 'rgba(16,185,129,0.35)', duration: 200 }, '-=150')
+      .add({ targets: d2, opacity: 0.4, duration: 200 }, '-=150')
+
+      .add({ targets: heap, opacity: [0.7, 1], background: ['rgba(245,158,11,0.35)', 'rgba(245,158,11,0.7)'], duration: 300 }, '+=100')
+      .add({ targets: d3, opacity: [0.4, 1], duration: 200 }, '-=100')
+      .add({ targets: [heap, d3], opacity: [null, null], duration: 250 }, '+=200')
+      .add({ targets: heap, background: 'rgba(245,158,11,0.35)', duration: 200 }, '-=150')
+      .add({ targets: d3, opacity: 0.4, duration: 200 }, '-=150')
+      .add({ targets: flat, opacity: [null, 0.7], duration: 300 }, '-=100')
+      .finished.then(function() {
+        setTimeout(logoCycle, 700);
+      });
+  }
+  logoCycle();
+}
+
+// ═══════════════════════════════════════════
+// FIX 2: INTERACTIVE PLACEMENT ALGORITHMS
+// ═══════════════════════════════════════════
+
+function runAlgorithms() {
+  var h1  = parseInt(document.getElementById('h1-size').value) || 0;
+  var h2  = parseInt(document.getElementById('h2-size').value) || 0;
+  var h3  = parseInt(document.getElementById('h3-size').value) || 0;
+  var req = parseInt(document.getElementById('req-size').value) || 0;
+
+  // Update scenario memory bar proportionally
+  var total = h1 + h2 + h3;
+  if (total <= 0) return;
+
+  var smH1 = document.getElementById('sm-h1');
+  var smH2 = document.getElementById('sm-h2');
+  var smH3 = document.getElementById('sm-h3');
+  smH1.style.flex = Math.max(1, Math.round((h1 / total) * 10));
+  smH2.style.flex = Math.max(1, Math.round((h2 / total) * 10));
+  smH3.style.flex = Math.max(1, Math.round((h3 / total) * 10));
+  smH1.innerHTML = 'H1<br>' + h1 + 'KB';
+  smH2.innerHTML = 'H2<br>' + h2 + 'KB';
+  smH3.innerHTML = 'H3<br>' + h3 + 'KB';
+
+  document.getElementById('hl-h1').textContent = 'H1 = ' + h1 + 'KB';
+  document.getElementById('hl-h2').textContent = 'H2 = ' + h2 + 'KB';
+  document.getElementById('hl-h3').textContent = 'H3 = ' + h3 + 'KB';
+  document.getElementById('algo-req-text').textContent = '→ New process P needs ' + req + 'KB. Which hole is chosen?';
+  document.getElementById('algo-scenario-title').textContent = '// Scenario: Memory with 3 holes — Process P requests ' + req + 'KB';
+
+  var holes = [
+    { id: 1, size: h1 },
+    { id: 2, size: h2 },
+    { id: 3, size: h3 }
+  ];
+  var fitting = holes.filter(function(h) { return h.size >= req; });
+
+  // First Fit: first fitting hole
+  var ffHole = fitting[0] || null;
+  // Best Fit: smallest fitting hole
+  var bfHole = fitting.slice().sort(function(a, b) { return a.size - b.size; })[0] || null;
+  // Worst Fit: largest fitting hole
+  var wfHole = fitting.slice().sort(function(a, b) { return b.size - a.size; })[0] || null;
+
+  var ffGrad = 'linear-gradient(90deg,rgba(16,185,129,0.4),rgba(16,185,129,0.15))';
+  var bfGrad = 'linear-gradient(90deg,rgba(6,182,212,0.4),rgba(6,182,212,0.15))';
+  var wfGrad = 'linear-gradient(90deg,rgba(249,115,22,0.4),rgba(249,115,22,0.15))';
+
+  updateAlgoCard('ff', ffHole, req, ffGrad, 'Scans from start, stops at first fit. Fast — minimal scan.', '#10b981');
+  updateAlgoCard('bf', bfHole, req, bfGrad, 'Scans all holes, picks tightest fit. Best utilization, slower search.', '#06b6d4');
+  updateAlgoCard('wf', wfHole, req, wfGrad, 'Scans all holes, picks largest. Leaves big remnant for future requests.', '#f97316');
+}
+
+function updateAlgoCard(prefix, hole, req, gradient, reason, dotColor) {
+  var bar     = document.getElementById(prefix + '-bar');
+  var noFit   = document.getElementById(prefix + '-nofit');
+  var reasonEl = document.getElementById(prefix + '-reason');
+  var wasteEl  = document.getElementById(prefix + '-waste');
+  var dot = bar.previousElementSibling && bar.previousElementSibling.classList.contains('waste-dot')
+    ? bar.previousElementSibling
+    : document.querySelector('#' + prefix + '-card .waste-dot');
+
+  if (!hole) {
+    bar.style.display = 'none';
+    noFit.style.display = 'block';
+    reasonEl.textContent = 'No hole is large enough for the ' + req + 'KB request.';
+    wasteEl.textContent = 'No fit — try smaller request';
+  } else {
+    bar.style.display = 'flex';
+    noFit.style.display = 'none';
+    var remnant = hole.size - req;
+    bar.textContent = 'H' + hole.id + ' chosen — ' + hole.size + 'KB \u2713';
+    bar.style.background = gradient;
+    bar.style.transform = 'scaleX(0)';
+    bar.style.transformOrigin = 'left';
+    anime({ targets: bar, scaleX: [0, 1], duration: 700, easing: 'easeOutExpo' });
+    reasonEl.textContent = reason + ' Hole H' + hole.id + ' (' + hole.size + 'KB). Remnant: ' + remnant + 'KB.';
+    var speed = prefix === 'ff' ? 'Fast' : 'Slow';
+    wasteEl.textContent = 'Remnant: ' + remnant + 'KB \u00B7 Speed: ' + speed;
+  }
+}
+
+// ═══════════════════════════════════════════
+// FIX 3: BUDDY SYSTEM STEP-THROUGH
+// ═══════════════════════════════════════════
+
+var BUDDY_STEPS = [
+  {
+    label: 'INITIAL STATE — 512KB FREE',
+    blocks: [
+      { cls: 'free', flex: 8, text: '512KB FREE' }
+    ]
+  },
+  {
+    label: 'ALLOC P1  (70KB request → 128KB block assigned)',
+    blocks: [
+      { cls: 'alloc b1', flex: 2, text: 'P1 · 128KB' },
+      { cls: 'free',     flex: 2, text: '128KB free' },
+      { cls: 'free',     flex: 4, text: '256KB free' }
+    ]
+  },
+  {
+    label: 'ALLOC P2  (35KB request → 64KB block assigned)',
+    blocks: [
+      { cls: 'alloc b1', flex: 2, text: 'P1 · 128KB' },
+      { cls: 'alloc b2', flex: 1, text: 'P2 · 64KB' },
+      { cls: 'free',     flex: 1, text: '64KB free' },
+      { cls: 'free',     flex: 4, text: '256KB free' }
+    ]
+  },
+  {
+    label: 'FREE P1 — block released, buddy check pending',
+    blocks: [
+      { cls: 'free',     flex: 2, text: '128KB (freed)' },
+      { cls: 'alloc b2', flex: 1, text: 'P2 · 64KB' },
+      { cls: 'free',     flex: 1, text: '64KB free' },
+      { cls: 'free',     flex: 4, text: '256KB free' }
+    ]
+  },
+  {
+    label: 'FREE P2 → buddies merge → 512KB fully restored',
+    blocks: [
+      { cls: 'free', flex: 8, text: '512KB FREE (fully restored)' }
+    ]
+  }
+];
+
+var buddyStep = 0;
+
+function renderBuddyStep(idx, animated) {
+  var display = document.getElementById('buddy-display');
+  var labelEl = document.getElementById('buddy-step-label');
+  var counterEl = document.getElementById('buddy-step-counter');
+  var prevBtn = document.getElementById('buddy-prev-btn');
+  var nextBtn = document.getElementById('buddy-next-btn');
+  if (!display) return;
+
+  var step = BUDDY_STEPS[idx];
+  labelEl.textContent = step.label;
+  counterEl.textContent = 'Step ' + (idx + 1) + ' / ' + BUDDY_STEPS.length;
+  prevBtn.disabled = (idx === 0);
+  nextBtn.disabled = (idx === BUDDY_STEPS.length - 1);
+
+  var oldBlocks = Array.from(display.children);
+
+  if (animated && oldBlocks.length > 0) {
+    anime({
+      targets: oldBlocks,
+      opacity: [1, 0],
+      scaleY: [1, 0.4],
+      duration: 220,
+      easing: 'easeInQuad',
+      complete: function() {
+        display.innerHTML = '';
+        buildBuddyBlocks(display, step.blocks, true);
+      }
+    });
+  } else {
+    display.innerHTML = '';
+    buildBuddyBlocks(display, step.blocks, false);
+  }
+}
+
+function buildBuddyBlocks(container, blocks, animate) {
+  blocks.forEach(function(b) {
+    var div = document.createElement('div');
+    div.className = 'bs-block ' + b.cls;
+    div.style.flex = b.flex;
+    div.textContent = b.text;
+    if (animate) {
+      div.style.opacity = '0';
+      div.style.transform = 'scaleY(0.2)';
+    }
+    container.appendChild(div);
+  });
+  if (animate) {
+    anime({
+      targets: container.querySelectorAll('.bs-block'),
+      opacity: [0, 1],
+      scaleY: [0.2, 1],
+      duration: 420,
+      delay: anime.stagger(55),
+      easing: 'easeOutExpo'
+    });
+  }
+}
+
+document.getElementById('buddy-prev-btn').addEventListener('click', function() {
+  if (buddyStep > 0) { buddyStep--; renderBuddyStep(buddyStep, true); }
+});
+document.getElementById('buddy-next-btn').addEventListener('click', function() {
+  if (buddyStep < BUDDY_STEPS.length - 1) { buddyStep++; renderBuddyStep(buddyStep, true); }
+});
+
+// Initial render
+renderBuddyStep(0, false);
+
+// ═══════════════════════════════════════════
+// FIX 4: COMPACTION ANIMATION
+// ═══════════════════════════════════════════
+
+function runCompaction() {
+  var hole1     = document.getElementById('dyn-hole-1');
+  var hole2     = document.getElementById('dyn-hole-2');
+  var freeBlock = document.getElementById('dyn-free');
+  var btn       = document.getElementById('compact-btn');
+  var status    = document.getElementById('compact-status');
+  if (!hole1 || !hole2 || !freeBlock) return;
+
+  // Calculate relocated: P2 (80KB) and P3 (112KB) move = 192KB
+  var relocated = 192;
+
+  btn.disabled = true;
+
+  anime.timeline({ easing: 'easeInOutQuad' })
+    .add({
+      targets: hole1,
+      height: [16, 0],
+      duration: 420
+    })
+    .add({
+      targets: hole2,
+      height: [12, 0],
+      duration: 360
+    }, '+=80')
+    .add({
+      targets: freeBlock,
+      height: [36, 64],
+      duration: 380,
+      complete: function() {
+        freeBlock.querySelector('.mb-size').textContent = '160KB';
+        freeBlock.querySelector('.mb-label').textContent = 'FREE';
+      }
+    }, '-=180')
+    .finished.then(function() {
+      btn.textContent = 'COMPACTED \u2713';
+      status.textContent = relocated + 'KB relocated';
+      status.style.display = 'inline';
+      anime({ targets: status, opacity: [0, 1], translateY: [4, 0], duration: 400, easing: 'easeOutExpo' });
+    });
+}
+</script>
+</body>
+</html>

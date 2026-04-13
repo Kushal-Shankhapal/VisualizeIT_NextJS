@@ -1,0 +1,197 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Circular Queue Visualization</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+    <div id="tsparticles"></div>
+
+    <div class="app">
+
+        <h1>Circular Queue Visualization</h1>
+
+        <div class="controls">
+
+            <input type="number" id="valueInput" placeholder="Enter value">
+            <input type="number" id="sizeInput" placeholder="Queue size" value="6" min="1" max="20">
+
+            <button onclick="enqueue()">Enqueue</button>
+            <button onclick="dequeue()">Dequeue</button>
+            <button onclick="peek()">Peek</button>
+            <button onclick="isEmpty()">Is Empty</button>
+            <button onclick="isFull()">Is Full</button>
+            <button onclick="resetQueue()">Reset</button>
+            <button onclick="resizeQueue()">Resize</button>
+
+        </div>
+
+        <div class="info">
+
+            <div><b>Step:</b> <span id="stepText">Circular Queue Ready</span></div>
+            <div><b>Time Complexity:</b> <span id="complexity">—</span></div>
+
+            <div class="pointer-info">
+                Front: <span id="frontIndex">-1</span> |
+                Rear: <span id="rearIndex">-1</span>
+            </div>
+
+        </div>
+
+        <div class="main-layout">
+
+            <div class="visual-section">
+
+                <div id="queueContainer" class="queue-container"></div>
+
+            </div>
+
+            <div class="code-section">
+
+                <div class="speed-control">
+                    <label for="speedSlider">
+                        <span class="speed-label">⚡ Animation Speed</span>
+                        <span class="speed-value-display" id="speedDisplay">1×</span>
+                    </label>
+                    <div class="speed-track">
+                        <span class="speed-tick">0.25×</span>
+                        <input type="range" id="speedSlider" min="1" max="5" value="3" step="1" oninput="updateSpeed(this.value)">
+                        <span class="speed-tick">4×</span>
+                    </div>
+                    <div class="speed-presets">
+                        <button class="speed-btn" onclick="setSpeed(1)">0.25×</button>
+                        <button class="speed-btn" onclick="setSpeed(2)">0.5×</button>
+                        <button class="speed-btn active" onclick="setSpeed(3)">1×</button>
+                        <button class="speed-btn" onclick="setSpeed(4)">2×</button>
+                        <button class="speed-btn" onclick="setSpeed(5)">4×</button>
+                    </div>
+                </div>
+
+                <select id="languageSelect" onchange="changeLanguage()">
+                    <option value="pseudocode" selected>Pseudocode</option>
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                </select>
+
+                <pre id="codeDisplay" class="language-pseudocode"><code id="codeText" class="language-pseudocode"></code></pre>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+
+        tsParticles.load("tsparticles", {
+            background: { color: "#0d0d0d" },
+            particles: {
+                number: { value: 80 },
+                color: { value: "#00ff88" },
+                links: { enable: true, color: "#00ff88" },
+                move: { enable: true, speed: 2 }
+            }
+        });
+
+    </script>
+
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Circular Queue Visualization</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="tsparticles"></div>
+
+<div class="app">
+
+  <h1>Circular Queue Visualization</h1>
+
+  <div class="controls">
+    <input type="number" id="valueInput" placeholder="Enter value">
+    <input type="number" id="sizeInput" placeholder="Queue size" value="6" min="1" max="20">
+    <button onclick="enqueue()">Enqueue</button>
+    <button onclick="dequeue()">Dequeue</button>
+    <button onclick="peek()">Peek</button>
+    <button onclick="isEmpty()">Is Empty</button>
+    <button onclick="isFull()">Is Full</button>
+    <button onclick="resetQueue()">Reset</button>
+    <button onclick="resizeQueue()">Resize</button>
+
+    <div class="speed-inline">
+      <span class="speed-label">⚡</span>
+      <input type="range" id="speedSlider" min="1" max="5" value="3" step="1" oninput="updateSpeed(this.value)">
+      <span class="speed-value-display" id="speedDisplay">1×</span>
+    </div>
+  </div>
+
+  <div class="info">
+    <div><b>Step:</b> <span id="stepText">Circular Queue Ready</span></div>
+    <div><b>Time Complexity:</b> <span id="complexity">—</span></div>
+    <div class="pointer-info">
+      Front: <span id="frontIndex">-1</span> &nbsp;|&nbsp;
+      Rear: <span id="rearIndex">-1</span>
+    </div>
+  </div>
+
+  <div class="main-layout">
+
+    <div class="visual-section">
+      <div id="queueContainer" class="queue-container"></div>
+    </div>
+
+    <div class="code-section">
+      <select id="languageSelect" onchange="changeLanguage()">
+        <option value="pseudocode" selected>Pseudocode</option>
+        <option value="c">C</option>
+        <option value="cpp">C++</option>
+        <option value="java">Java</option>
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+      </select>
+      <pre id="codeDisplay" class="language-pseudocode"><code id="codeText" class="language-pseudocode"></code></pre>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="script.js"></script>
+<script>
+  tsParticles.load("tsparticles", {
+    background: { color: "#0d0d0d" },
+    particles: {
+      number: { value: 80 },
+      color: { value: "#00ff88" },
+      links: { enable: true, color: "#00ff88" },
+      move: { enable: true, speed: 2 }
+    }
+  });
+</script>
+
+</body>
+</html>

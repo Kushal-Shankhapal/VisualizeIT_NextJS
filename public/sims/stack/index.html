@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Stack Visualizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- PARTICLE BACKGROUND -->
+<div id="tsparticles"></div>
+
+<div class="app">
+
+<h1>Stack Visualizer</h1>
+
+<div class="controls">
+  <input type="number" id="valueInput" placeholder="Enter value">
+  <button onclick="pushValue()">Push</button>
+  <button onclick="popValue()">Pop</button>
+  <button onclick="peekValue()">Peek</button>
+  <button onclick="resetStack()">Reset</button>
+</div>
+
+<div class="info">
+  <div><b>Step:</b> <span id="stepText">Waiting...</span></div>
+  <div><b>Time Complexity:</b> <span id="complexity">—</span></div>
+</div>
+
+<div class="main-layout">
+
+  <div class="visual-section">
+    <div id="stackContainer" class="stack-container"></div>
+  </div>
+
+  <div class="code-section">
+    <select id="languageSelect" onchange="changeLanguage()">
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="java">Java</option>
+      <option value="python">Python</option>
+      <option value="javascript">JavaScript</option>
+    </select>
+    <pre id="codeDisplay"></pre>
+  </div>
+
+</div>
+
+</div>
+
+<!-- PARTICLE SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+<script src="script.js"></script>
+
+<script>
+tsParticles.load("tsparticles", {
+  background: { color: "#0d0d0d" },
+  particles: {
+    number: { value: 80 },
+    color: { value: "#00ff88" },
+    links: { enable: true, color: "#00ff88" },
+    move: { enable: true, speed: 2 },
+    opacity: { value: 0.5 },
+    size: { value: 3 }
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PAGE//FAULT: Page Replacement Algorithms</title>
+  <!-- VISUALIZE IT — Shared Font System -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Platypi:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="../tailwind-script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="bg-terminal text-green-primary font-mono">
+
+  <div class="crt-overlay" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- TOP PHASE BAR -->
+  <div class="phase-bar" id="phase-bar">
+    <div class="phase-item active" data-phase="foundations" onclick="scrollToSection('key-terms')">
+      <span class="phase-dot"></span><span class="phase-label">FOUNDATIONS</span>
+    </div>
+    <div class="phase-connector">
+      <div class="phase-connector-fill" id="pc-fill-1"></div>
+    </div>
+    <div class="phase-item" data-phase="concepts" onclick="scrollToSection('key-terms')">
+      <span class="phase-dot"></span><span class="phase-label">CONCEPTS</span>
+    </div>
+    <div class="phase-connector">
+      <div class="phase-connector-fill" id="pc-fill-2"></div>
+    </div>
+    <div class="phase-item" data-phase="algorithms" onclick="scrollToSection('fifo')">
+      <span class="phase-dot"></span><span class="phase-label">ALGORITHMS</span>
+    </div>
+    <div class="phase-connector">
+      <div class="phase-connector-fill" id="pc-fill-3"></div>
+    </div>
+    <div class="phase-item" data-phase="simulator" onclick="scrollToSection('simulator')">
+      <span class="phase-dot"></span><span class="phase-label">SIMULATOR</span>
+    </div>
+  </div>
+
+  <!-- SIDE NAV -->
+  <nav class="side-nav" id="side-nav">
+    <div class="snav-group">
+      <div class="snav-phase-label">FOUND.</div>
+      <div class="snav-dot active" data-section="key-terms" title="Key Terms" onclick="scrollToSection('key-terms')">
+      </div>
+      <div class="snav-dot" data-section="page-fault-cycle" title="How It Works"
+        onclick="scrollToSection('page-fault-cycle')"></div>
+      <div class="snav-dot" data-section="key-metrics" title="Key Metrics" onclick="scrollToSection('key-metrics')">
+      </div>
+    </div>
+    <div class="snav-divider-line"></div>
+    <div class="snav-group">
+      <div class="snav-phase-label">ALGOS</div>
+      <div class="snav-dot" data-section="fifo" title="FIFO" onclick="scrollToSection('fifo')"></div>
+      <div class="snav-dot" data-section="lru" title="LRU" onclick="scrollToSection('lru')"></div>
+      <div class="snav-dot" data-section="opt" title="Optimal" onclick="scrollToSection('opt')"></div>
+    </div>
+    <div class="snav-divider-line"></div>
+    <div class="snav-group">
+      <div class="snav-phase-label">SIM</div>
+      <div class="snav-dot" data-section="simulator" title="Simulator" onclick="scrollToSection('simulator')"></div>
+    </div>
+  </nav>
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <section id="hero" class="hero-section">
+    <div class="glitch-grid" aria-hidden="true"></div>
+    <div class="hero-content fade-in">
+      <div class="hero-status">
+        <span class="blink-dot"></span>
+        <span class="hero-status-txt">OS_KERNEL › MEMORY_MANAGER › PAGE_REPLACEMENT</span>
+      </div>
+      <h1 class="hero-title">PAGE<span class="text-amber">//</span>FAULT</h1>
+      <p class="hero-sub">Understand page replacement from the ground up, through animation.</p>
+      <div class="hero-terminal">
+        <span class="t-amber">$</span> load_module --mode interactive --depth full
+        <span class="cursor-blink">█</span>
+      </div>
+      <div class="hero-btns">
+        <button onclick="scrollToSection('key-terms')" class="btn-primary">▶ START LEARNING</button>
+        <button onclick="scrollToSection('simulator')" class="btn-ghost">⤷ SKIP TO SIMULATOR</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       PHASE 1 / FOUNDATIONS
+  ═══════════════════════════════════════ -->
+
+  <!-- ═══ KEY TERMS ═══ -->
+  <section id="key-terms" class="page-section">
+    <div class="phase-tag">PHASE 1 / FOUNDATIONS</div>
+    <div class="section-eyebrow">MODULE 01</div>
+    <h2 class="section-title">KEY TERMS</h2>
+    <p class="section-lead">Three building blocks. Everything else follows from these.</p>
+
+    <div class="terms-grid terms-grid-3">
+
+      <div class="term-card reveal" data-color="amber">
+        <div class="term-icon">📄</div>
+        <div class="term-name text-amber">PAGE</div>
+        <div class="term-def">A fixed-size block of <strong>virtual memory</strong>. Every process sees its memory as a
+          sequence of pages. Typical size: 4 KB. Identified by a page number <span class="text-amber">(p)</span>.</div>
+      </div>
+
+      <div class="term-card reveal delay-1" data-color="cyan">
+        <div class="term-icon">🗂</div>
+        <div class="term-name text-cyan">FRAME</div>
+        <div class="term-def">A fixed-size slot in <strong>physical RAM</strong>. Same size as a page. The OS maps pages
+          into frames. When all frames are occupied, one must be evicted before a new page can load.</div>
+      </div>
+
+      <div class="term-card reveal delay-2" data-color="opt">
+        <div class="term-icon">🗺</div>
+        <div class="term-name text-opt">PAGE TABLE</div>
+        <div class="term-def">A per-process OS structure mapping each <span class="text-amber">page to a frame</span>.
+          Each entry carries a <strong>valid bit</strong>. If the bit is unset, that page is not in RAM and the next
+          access triggers a fault.</div>
+      </div>
+
+    </div>
+
+    <div class="page-replacement-banner reveal">
+      <div class="prb-icon">🔄</div>
+      <div class="prb-body">
+        <div class="prb-title">PAGE REPLACEMENT</div>
+        <div class="prb-def">When all frames are full and a new page is needed, the OS picks one existing page to
+          remove. The algorithm governing that choice is a <strong>page replacement algorithm</strong>. A poor choice
+          causes an immediate fault on the evicted page's next access. Minimising faults is the goal.</div>
+      </div>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('page-fault-cycle')" class="btn-next">NEXT: HOW IT ALL WORKS →</button>
+    </div>
+  </section>
+
+  <!-- ═══ PAGE FAULT CYCLE ═══ -->
+  <section id="page-fault-cycle" class="page-section">
+    <div class="section-eyebrow">MODULE 02</div>
+    <h2 class="section-title">PAGE FAULT CYCLE</h2>
+    <p class="section-lead">A page fault is not a crash. It is a controlled 6-step OS process. Step through it.</p>
+
+    <div class="demo-box reveal" id="pfc-box">
+      <div class="demo-label">STEP-THROUGH: 6-Step Fault Handling</div>
+
+      <div class="pfc-controls">
+        <button class="btn-play" id="pfc-play-btn" onclick="pfcDemo.playAuto()">▶ PLAY</button>
+        <button class="btn-step-outline" onclick="pfcDemo.step()">STEP ▶</button>
+        <button class="btn-reset-outline" onclick="pfcDemo.reset()">↺ RESET</button>
+        <span class="step-counter" id="pfc-counter">Step 0 / 6</span>
+      </div>
+
+      <!-- Step pills -->
+      <div class="pfc-pills-row">
+        <div class="pfc-pill" data-step="1">① reference</div>
+        <div class="pfc-pill-sep">›</div>
+        <div class="pfc-pill" data-step="2">② trap</div>
+        <div class="pfc-pill-sep">›</div>
+        <div class="pfc-pill" data-step="3">③ find on disk</div>
+        <div class="pfc-pill-sep">›</div>
+        <div class="pfc-pill" data-step="4">④ load page</div>
+        <div class="pfc-pill-sep">›</div>
+        <div class="pfc-pill" data-step="5">⑤ update table</div>
+        <div class="pfc-pill-sep">›</div>
+        <div class="pfc-pill" data-step="6">⑥ restart</div>
+      </div>
+
+      <div class="pfc-actors-grid">
+
+        <div class="pfc-actor-cell">
+          <div class="pfc-node process-node" id="pfn-process">
+            <div class="pfc-node-icon">⬛</div>
+            <div class="pfc-node-label">PROCESS</div>
+            <div class="pfc-node-state" id="pfn-process-state">running · load M</div>
+          </div>
+        </div>
+
+        <div class="pfc-connector" id="pfc-conn-1"><-></div>
+
+        <div class="pfc-actor-cell">
+          <div class="pfc-node os-node" id="pfn-os">
+            <div class="pfc-node-icon">🖥</div>
+            <div class="pfc-node-label">OS + PAGE TABLE</div>
+            <div class="pfc-os-msg" id="pfn-os-msg">—</div>
+            <div class="pfc-pt-mini">
+              <div class="pfc-pt-mini-row dim-row"><span>p=0</span><span class="text-cyan">f=2 ✓</span></div>
+              <div class="pfc-pt-mini-row fault-row" id="pfn-pt-row">
+                <span class="text-amber">p=M</span>
+                <span id="pfn-pt-val" class="text-fault">✗ invalid</span>
+              </div>
+              <div class="pfc-pt-mini-row dim-row"><span>p=2</span><span class="text-cyan">f=5 ✓</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pfc-connector" id="pfc-conn-2"><-></div>
+
+        <div class="pfc-actor-cell">
+          <div class="pfc-node ram-node" id="pfn-ram">
+            <div class="pfc-node-icon">▦</div>
+            <div class="pfc-node-label">PHYSICAL RAM</div>
+            <div class="pfc-ram-list">
+              <div class="pfc-ram-row">F0 · p0</div>
+              <div class="pfc-ram-row">F1 · p2</div>
+              <div class="pfc-ram-row free-row" id="pfn-free">F2 · <span id="pfn-free-val">FREE</span></div>
+              <div class="pfc-ram-row">F3 · p1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pfc-connector" id="pfc-conn-3"><-></div>
+
+        <div class="pfc-actor-cell">
+          <div class="pfc-node disk-node" id="pfn-disk">
+            <div class="pfc-node-icon disk-spin-icon" id="pfn-disk-icon">⬡</div>
+            <div class="pfc-node-label">BACKING STORE</div>
+            <div class="pfc-disk-list">
+              <div class="pfc-disk-row highlight-disk" id="pfn-disk-m">page M</div>
+              <div class="pfc-disk-row">page X</div>
+              <div class="pfc-disk-row">page Y</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pfc-desc-bar">
+        <div class="pfc-desc-num" id="pfc-desc-num">—</div>
+        <div class="pfc-desc-text" id="pfc-desc-text">Press PLAY or STEP to walk through the page fault handling cycle.
+        </div>
+      </div>
+    </div>
+
+    <!-- Transition card into metrics -->
+    <div class="transition-card reveal">
+      <div class="tc-done-txt">You now understand what a page fault is and how the OS handles it.</div>
+      <div class="tc-arrow-txt">↓</div>
+      <div class="tc-next-txt">Before the algorithms: two numbers you need to know: <em>page hit</em> and <em>hit
+          ratio</em>.</div>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('key-metrics')" class="btn-next">NEXT: KEY METRICS →</button>
+    </div>
+  </section>
+
+  <!-- ═══ KEY METRICS ═══ -->
+  <section id="key-metrics" class="page-section">
+    <div class="section-eyebrow">MODULE 03</div>
+    <h2 class="section-title">KEY METRICS</h2>
+    <p class="section-lead">How we measure whether a page replacement algorithm is doing well.</p>
+
+    <div class="metrics-cards-grid reveal">
+
+      <div class="metric-explain-card hit-card">
+        <div class="mec-icon">✓</div>
+        <div class="mec-term text-cyan">PAGE HIT</div>
+        <div class="mec-def">The requested page is already in a RAM frame. No disk access needed. The CPU gets its data
+          immediately. Every hit saves a slow disk read.</div>
+        <div class="mec-badge hit-badge">FAST · RAM ACCESS</div>
+      </div>
+
+      <div class="metric-explain-card fault-card">
+        <div class="mec-icon">✗</div>
+        <div class="mec-term text-fault">PAGE FAULT</div>
+        <div class="mec-def">The requested page is not in RAM. The OS must fetch it from disk, which takes thousands of
+          times longer than a RAM access. Algorithms exist to minimise these.</div>
+        <div class="mec-badge fault-badge">SLOW · DISK ACCESS</div>
+      </div>
+
+      <div class="metric-explain-card ratio-card">
+        <div class="mec-icon">≈</div>
+        <div class="mec-term text-amber">HIT RATIO</div>
+        <div class="mec-formula">Hit Ratio = Hits / (Hits + Faults)</div>
+        <div class="mec-def">The fraction of memory accesses that were served directly from RAM. Closer to 1.0 is
+          better. A hit ratio of 0.75 means 3 in 4 accesses avoided disk entirely.</div>
+        <div class="mec-example">
+          <span class="text-dim">e.g.</span>
+          <span>8 hits, 4 faults → hit ratio = <strong class="text-amber">0.67</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Transition card into algorithms -->
+    <div class="transition-card reveal">
+      <div class="tc-done-txt">Foundations complete. You know pages, frames, faults, and how they are measured.</div>
+      <div class="tc-arrow-txt">↓</div>
+      <div class="tc-next-txt">Now: three different algorithms. Each answers the same question differently: <em>which
+          page do you evict?</em></div>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('fifo')" class="btn-next">NEXT: THE ALGORITHMS →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       PHASE 2 / ALGORITHMS
+  ═══════════════════════════════════════ -->
+
+  <!-- ═══ FIFO ═══ -->
+  <section id="fifo" class="page-section">
+    <div class="phase-tag">PHASE 2 / ALGORITHMS</div>
+    <div class="section-eyebrow">MODULE 04</div>
+
+    <div class="algo-header-row">
+      <div class="algo-icon-wrap fifo-icon-wrap">
+        <svg class="algo-icon-svg" viewBox="0 0 48 48" fill="none">
+          <!-- Queue pipe icon for FIFO -->
+          <rect x="4" y="18" width="40" height="12" rx="6" stroke="currentColor" stroke-width="2.5" fill="none" />
+          <rect x="8" y="21" width="8" height="6" rx="2" fill="currentColor" opacity="0.9" />
+          <rect x="20" y="21" width="8" height="6" rx="2" fill="currentColor" opacity="0.6" />
+          <rect x="32" y="21" width="8" height="6" rx="2" fill="currentColor" opacity="0.3" />
+          <path d="M4 24 L0 24" stroke="currentColor" stroke-width="2" stroke-dasharray="2 1" opacity="0.4" />
+          <path d="M44 24 L48 24" stroke="currentColor" stroke-width="2" stroke-dasharray="2 1" opacity="0.4" />
+          <path d="M1 20 L3 24 L1 28" stroke="currentColor" stroke-width="1.5" opacity="0.6" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title">FIFO</h2>
+        <p class="algo-full-name">First-In, First-Out</p>
+      </div>
+    </div>
+
+    <p class="section-lead">The oldest page in memory is always the first to go. No questions asked.</p>
+
+    <div class="algo-desc-card reveal">
+      <p>FIFO maintains a <strong class="text-amber">queue</strong> of pages ordered by when they were loaded. On a page
+        fault, it evicts the page at the front: the one sitting in RAM the longest. New pages join the back of the
+        queue. Simple, predictable, and zero overhead.</p>
+    </div>
+
+    <div class="demo-box reveal" id="fifo-demo">
+      <div class="demo-label">STEP-THROUGH: FIFO <span class="dim-txt">3 frames · ref: 7 0 1 2 0 3 0 4 2 3 0 3 2</span>
+      </div>
+      <div class="stepper-controls">
+        <button class="btn-step-outline" onclick="fifoDemo.prev()">◀ PREV</button>
+        <span class="step-counter" id="fifo-step-counter">Step 0 / 13</span>
+        <button class="btn-step-outline" onclick="fifoDemo.next()">NEXT ▶</button>
+        <button class="btn-reset-outline" onclick="fifoDemo.reset()">↺</button>
+        <button class="btn-auto" id="fifo-auto-btn" onclick="fifoDemo.toggleAuto()">AUTO ▶</button>
+      </div>
+      <div class="tb-demo-wrap">
+        <div class="tb-ref-row">
+          <div class="tb-label">Ref</div>
+          <div id="fifo-tb-ref" class="tb-cells"></div>
+        </div>
+        <div id="fifo-tb-frames" class="tb-frame-rows"></div>
+        <div class="tb-status-row">
+          <div class="tb-label">F / H</div>
+          <div id="fifo-tb-status" class="tb-cells"></div>
+        </div>
+      </div>
+      <div class="demo-stats">
+        <span>FAULTS <strong class="text-fault" id="fifo-fault-count">0</strong></span>
+        <span>HITS <strong class="text-cyan" id="fifo-hit-count">0</strong></span>
+        <span>HIT RATIO <strong class="text-amber" id="fifo-hit-ratio">—</strong></span>
+      </div>
+    </div>
+
+    <div class="advdisadv-row reveal">
+      <div class="adv-block">
+        <div class="adv-block-title">
+          <span class="adv-plus">+</span> ADVANTAGES
+        </div>
+        <ul class="adv-list">
+          <li>Extremely simple to implement using a basic queue data structure.</li>
+          <li>No runtime overhead. The OS never tracks how often pages are used.</li>
+          <li>Fully predictable eviction order, easy to reason about.</li>
+        </ul>
+      </div>
+      <div class="disadv-block">
+        <div class="disadv-block-title">
+          <span class="disadv-minus">−</span> DISADVANTAGES
+        </div>
+        <ul class="disadv-list">
+          <li>Evicts by age, not usefulness. A heavily-used page loaded early gets kicked before a useless recent one.
+          </li>
+          <li>Suffers from <strong class="text-fault">Belady's Anomaly</strong>: adding more frames can paradoxically
+            increase faults with certain reference strings.</li>
+          <li>Worst real-world performance of the three algorithms.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Belady's Anomaly callout -->
+    <div class="belady-card reveal">
+      <div class="belady-header">
+        <span class="belady-icon">⚠</span>
+        <span class="belady-title">BELADY'S ANOMALY</span>
+      </div>
+      <p class="belady-explain">Normally, giving an algorithm more frames means fewer page faults. With FIFO, this isn't
+        guaranteed. On certain reference strings, increasing from 3 to 4 frames actually causes more faults. This
+        counterintuitive behaviour is called Belady's Anomaly and it is unique to FIFO. LRU and Optimal never exhibit
+        it.</p>
+      <div class="belady-bars" id="belady-bars">
+        <div class="belady-bar-row">
+          <span class="bb-label">3 frames</span>
+          <div class="bb-track">
+            <div class="bb-fill" data-w="72">9 faults</div>
+          </div>
+        </div>
+        <div class="belady-bar-row">
+          <span class="bb-label">4 frames</span>
+          <div class="bb-track">
+            <div class="bb-fill bb-worse" data-w="80">10 faults ↑</div>
+          </div>
+        </div>
+      </div>
+      <p class="belady-note">ref: 1 2 3 4 1 2 5 1 2 3 4 5. More frames, more faults.</p>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('lru')" class="btn-next">NEXT: LRU →</button>
+    </div>
+  </section>
+
+  <!-- ═══ LRU ═══ -->
+  <section id="lru" class="page-section">
+    <div class="section-eyebrow">MODULE 05</div>
+
+    <div class="algo-header-row">
+      <div class="algo-icon-wrap lru-icon-wrap">
+        <svg class="algo-icon-svg" viewBox="0 0 48 48" fill="none">
+          <!-- Clock / recency icon for LRU -->
+          <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2.5" fill="none" />
+          <path d="M24 12 L24 24 L32 30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <circle cx="24" cy="24" r="2" fill="currentColor" />
+          <path d="M8 24 Q6 18 10 14" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.4" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title">LRU</h2>
+        <p class="algo-full-name">Least Recently Used</p>
+      </div>
+    </div>
+
+    <p class="section-lead">The page unused for the longest time is the first to go.</p>
+
+    <div class="algo-desc-card reveal">
+      <p>LRU tracks <strong class="text-cyan">when each page was last accessed</strong>. On a fault, it evicts the page
+        whose last use was furthest in the past: the coldest page. This exploits temporal locality: if a page was used
+        recently, it's likely to be used again soon. LRU never suffers from Belady's Anomaly.</p>
+    </div>
+
+    <div class="demo-box reveal" id="lru-demo">
+      <div class="demo-label">STEP-THROUGH: LRU <span class="dim-txt">3 frames · ref: 7 0 1 2 0 3 0 4 2 3 0 3 2</span>
+      </div>
+      <div class="stepper-controls">
+        <button class="btn-step-outline" onclick="lruDemo.prev()">◀ PREV</button>
+        <span class="step-counter" id="lru-step-counter">Step 0 / 13</span>
+        <button class="btn-step-outline" onclick="lruDemo.next()">NEXT ▶</button>
+        <button class="btn-reset-outline" onclick="lruDemo.reset()">↺</button>
+        <button class="btn-auto" id="lru-auto-btn" onclick="lruDemo.toggleAuto()">AUTO ▶</button>
+      </div>
+      <div class="tb-demo-wrap">
+        <div class="tb-ref-row">
+          <div class="tb-label">Ref</div>
+          <div id="lru-tb-ref" class="tb-cells"></div>
+        </div>
+        <div id="lru-tb-frames" class="tb-frame-rows"></div>
+        <div class="tb-status-row">
+          <div class="tb-label">F / H</div>
+          <div id="lru-tb-status" class="tb-cells"></div>
+        </div>
+      </div>
+      <div class="demo-stats">
+        <span>FAULTS <strong class="text-fault" id="lru-fault-count">0</strong></span>
+        <span>HITS <strong class="text-cyan" id="lru-hit-count">0</strong></span>
+        <span>HIT RATIO <strong class="text-amber" id="lru-hit-ratio">—</strong></span>
+      </div>
+    </div>
+
+    <div class="advdisadv-row reveal">
+      <div class="adv-block">
+        <div class="adv-block-title"><span class="adv-plus">+</span> ADVANTAGES</div>
+        <ul class="adv-list">
+          <li>Exploits temporal locality: recently used pages are likely to be used again soon.</li>
+          <li>No Belady's Anomaly. More frames always means equal or fewer faults.</li>
+          <li>Comes close to Optimal performance on real workloads.</li>
+        </ul>
+      </div>
+      <div class="disadv-block">
+        <div class="disadv-block-title"><span class="disadv-minus">−</span> DISADVANTAGES</div>
+        <ul class="disadv-list">
+          <li>Requires tracking the last-use timestamp of every page, using either a counter or a stack per process.
+          </li>
+          <li>Higher overhead than FIFO; efficient implementation needs hardware support.</li>
+          <li>Still not optimal. It uses the past as a proxy for the future, which is not always accurate.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('opt')" class="btn-next">NEXT: OPTIMAL →</button>
+    </div>
+  </section>
+
+  <!-- ═══ OPTIMAL ═══ -->
+  <section id="opt" class="page-section">
+    <div class="section-eyebrow">MODULE 06</div>
+
+    <div class="algo-header-row">
+      <div class="algo-icon-wrap opt-icon-wrap">
+        <svg class="algo-icon-svg" viewBox="0 0 48 48" fill="none">
+          <!-- Crystal ball / future-seeing icon for OPT -->
+          <circle cx="24" cy="22" r="16" stroke="currentColor" stroke-width="2.5" fill="none" />
+          <path d="M14 38 Q24 44 34 38" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+          <!-- star inside -->
+          <path d="M24 14 L25.5 19 L30 19 L26.5 22 L28 27 L24 24 L20 27 L21.5 22 L18 19 L22.5 19 Z" fill="currentColor"
+            opacity="0.7" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title">OPTIMAL</h2>
+        <p class="algo-full-name">Belady's Algorithm (OPT)</p>
+      </div>
+    </div>
+
+    <p class="section-lead">Evict the page not needed for the longest time. Requires knowing the future.</p>
+
+    <div class="algo-desc-card reveal">
+      <p>On a fault, OPT looks <strong class="text-opt">ahead in the reference string</strong> and evicts the page whose
+        next use is furthest away. If a page is never referenced again, it's evicted immediately. This produces the
+        absolute minimum number of page faults possible for any reference string and frame count, but it requires
+        complete foreknowledge of the future, making it impossible to implement in a real OS. It exists purely as a
+        <strong class="text-opt">theoretical benchmark</strong>.</p>
+    </div>
+
+    <div class="demo-box reveal" id="opt-demo">
+      <div class="demo-label">STEP-THROUGH: OPTIMAL <span class="dim-txt">3 frames · ref: 7 0 1 2 0 3 0 4 2 3 0 3
+          2</span></div>
+      <div class="stepper-controls">
+        <button class="btn-step-outline" onclick="optDemo.prev()">◀ PREV</button>
+        <span class="step-counter" id="opt-step-counter">Step 0 / 13</span>
+        <button class="btn-step-outline" onclick="optDemo.next()">NEXT ▶</button>
+        <button class="btn-reset-outline" onclick="optDemo.reset()">↺</button>
+        <button class="btn-auto" id="opt-auto-btn" onclick="optDemo.toggleAuto()">AUTO ▶</button>
+      </div>
+      <div class="tb-demo-wrap">
+        <div class="tb-ref-row">
+          <div class="tb-label">Ref</div>
+          <div id="opt-tb-ref" class="tb-cells"></div>
+        </div>
+        <div id="opt-tb-frames" class="tb-frame-rows"></div>
+        <div class="tb-status-row">
+          <div class="tb-label">F / H</div>
+          <div id="opt-tb-status" class="tb-cells"></div>
+        </div>
+      </div>
+      <div class="demo-stats">
+        <span>FAULTS <strong class="text-fault" id="opt-fault-count">0</strong></span>
+        <span>HITS <strong class="text-cyan" id="opt-hit-count">0</strong></span>
+        <span>HIT RATIO <strong class="text-amber" id="opt-hit-ratio">—</strong></span>
+      </div>
+    </div>
+
+    <div class="advdisadv-row reveal">
+      <div class="adv-block">
+        <div class="adv-block-title"><span class="adv-plus">+</span> ADVANTAGES</div>
+        <ul class="adv-list">
+          <li>Provably produces the minimum possible number of page faults for any input.</li>
+          <li>No Belady's Anomaly. Adding frames never makes performance worse.</li>
+          <li>The gold standard benchmark. All practical algorithms are measured against it.</li>
+        </ul>
+      </div>
+      <div class="disadv-block">
+        <div class="disadv-block-title"><span class="disadv-minus">−</span> DISADVANTAGES</div>
+        <ul class="disadv-list">
+          <li>Requires knowing the exact future reference string, which is impossible in a running OS.</li>
+          <li>Cannot be implemented in practice; used only for simulation and analysis.</li>
+          <li>Gives no insight into how to approximate its behaviour in real systems.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="comparison-table reveal">
+      <div class="demo-label">ALGORITHM COMPARISON</div>
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="text-amber">
+              <svg width="14" height="14" viewBox="0 0 48 48" fill="none"
+                style="display:inline;vertical-align:middle;margin-right:4px">
+                <rect x="4" y="18" width="40" height="12" rx="6" stroke="currentColor" stroke-width="3" fill="none" />
+                <rect x="8" y="21" width="8" height="6" rx="2" fill="currentColor" />
+              </svg>
+              FIFO
+            </th>
+            <th class="text-cyan">
+              <svg width="14" height="14" viewBox="0 0 48 48" fill="none"
+                style="display:inline;vertical-align:middle;margin-right:4px">
+                <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" fill="none" />
+                <path d="M24 12 L24 24 L32 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+              </svg>
+              LRU
+            </th>
+            <th class="text-opt">
+              <svg width="14" height="14" viewBox="0 0 48 48" fill="none"
+                style="display:inline;vertical-align:middle;margin-right:4px">
+                <circle cx="24" cy="22" r="16" stroke="currentColor" stroke-width="3" fill="none" />
+                <path d="M24 14 L25.5 19 L30 19 L26.5 22 L28 27 L24 24 L20 27 L21.5 22 L18 19 L22.5 19 Z"
+                  fill="currentColor" />
+              </svg>
+              OPTIMAL
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Eviction rule</td>
+            <td>Oldest loaded page</td>
+            <td>Least recently used</td>
+            <td>Farthest future use</td>
+          </tr>
+          <tr>
+            <td>Implementation</td>
+            <td class="text-cyan">Simple (queue)</td>
+            <td class="text-amber">Moderate (stack)</td>
+            <td class="text-fault">Impossible (oracle)</td>
+          </tr>
+          <tr>
+            <td>Belady's Anomaly</td>
+            <td class="text-fault">Yes ✗</td>
+            <td class="text-cyan">No ✓</td>
+            <td class="text-cyan">No ✓</td>
+          </tr>
+          <tr>
+            <td>Practical use</td>
+            <td class="text-cyan">Yes</td>
+            <td class="text-cyan">Yes</td>
+            <td class="text-fault">Benchmark only</td>
+          </tr>
+          <tr>
+            <td>Fault count</td>
+            <td class="text-amber">Highest</td>
+            <td class="text-cyan">Low</td>
+            <td class="text-opt">Minimum ★</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-nav">
+      <button onclick="scrollToSection('simulator')" class="btn-next">NEXT: SIMULATOR →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       PHASE 3 / SIMULATOR
+  ═══════════════════════════════════════ -->
+
+  <!-- ═══ SIMULATOR ═══ -->
+  <section id="simulator" class="page-section">
+    <div class="phase-tag">PHASE 3 / SIMULATOR</div>
+    <div class="section-eyebrow">MODULE 07</div>
+    <h2 class="section-title">SIMULATOR</h2>
+    <p class="section-lead">Your reference string. Your frame count. All three algorithms at once.</p>
+
+    <div class="sim-container">
+
+      <div class="sim-config-panel reveal">
+        <div class="sim-panel-title">⚙ CONFIGURATION</div>
+        <div class="sim-input-row">
+          <label>Reference String <span class="dim-txt">(space-separated page numbers)</span></label>
+          <input type="text" id="sim-ref" class="sim-input" value="7 0 1 2 0 3 0 4 2 3 0 3 2" />
+        </div>
+        <div class="sim-config-bottom">
+          <div class="sim-frames-group">
+            <label>Frames</label>
+            <div class="sim-frames-control">
+              <button onclick="changeFrames(-1)" class="btn-num">−</button>
+              <span id="sim-frames-display" class="frames-num-display">3</span>
+              <button onclick="changeFrames(1)" class="btn-num">+</button>
+            </div>
+          </div>
+          <div class="sim-algo-group">
+            <label>Algorithms</label>
+            <div class="algo-checkboxes">
+              <label class="algo-check"><input type="checkbox" id="cb-fifo" checked /><span
+                  class="text-amber">FIFO</span></label>
+              <label class="algo-check"><input type="checkbox" id="cb-lru" checked /><span
+                  class="text-cyan">LRU</span></label>
+              <label class="algo-check"><input type="checkbox" id="cb-opt" checked /><span
+                  class="text-opt">OPTIMAL</span></label>
+            </div>
+          </div>
+          <div class="sim-speed-group">
+            <label>Speed</label>
+            <div class="speed-control">
+              <input type="range" id="sim-speed" min="100" max="1500" value="400" step="100" class="speed-slider" />
+              <span id="sim-speed-label" class="text-amber" style="font-size:0.75rem">400ms</span>
+            </div>
+          </div>
+        </div>
+        <div class="sim-btn-row">
+          <button onclick="simRun()" class="btn-primary" id="sim-run-btn">▶ RUN</button>
+          <button onclick="simStep()" class="btn-ghost">STEP ▶</button>
+          <button onclick="simReset()" class="btn-reset-outline">↺ RESET</button>
+        </div>
+        <div id="sim-error" class="sim-error hidden"></div>
+      </div>
+
+      <div id="sim-empty" class="sim-empty-state">
+        <span class="sim-empty-icon">▓▓▓</span>
+        <span class="sim-empty-msg">Configure and run a simulation above</span>
+      </div>
+
+      <div id="sim-results" class="sim-results-stack hidden">
+
+        <div class="sim-algo-section" id="sim-fifo-section">
+          <div class="sim-algo-header">
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="none" class="sim-algo-icon text-amber">
+              <rect x="4" y="18" width="40" height="12" rx="6" stroke="currentColor" stroke-width="3" fill="none" />
+              <rect x="8" y="21" width="8" height="6" rx="2" fill="currentColor" />
+              <rect x="20" y="21" width="8" height="6" rx="2" fill="currentColor" opacity="0.5" />
+            </svg>
+            <span class="sim-algo-name text-amber">FIFO</span>
+            <span class="sim-algo-tagline">First In, First Out</span>
+            <span class="sim-algo-badge" id="sim-fifo-badge"></span>
+          </div>
+          <div class="sim-tb-wrap">
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">Ref</div>
+              <div id="sim-fifo-ref" class="sim-tb-cells"></div>
+            </div>
+            <div id="sim-fifo-frames-rows" class="sim-tb-frame-rows"></div>
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">F / H</div>
+              <div id="sim-fifo-status" class="sim-tb-cells"></div>
+            </div>
+          </div>
+          <div class="sim-algo-stats" id="sim-fifo-stats"></div>
+        </div>
+
+        <div class="sim-algo-section" id="sim-lru-section">
+          <div class="sim-algo-header">
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="none" class="sim-algo-icon text-cyan">
+              <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" fill="none" />
+              <path d="M24 12 L24 24 L32 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            <span class="sim-algo-name text-cyan">LRU</span>
+            <span class="sim-algo-tagline">Least Recently Used</span>
+            <span class="sim-algo-badge" id="sim-lru-badge"></span>
+          </div>
+          <div class="sim-tb-wrap">
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">Ref</div>
+              <div id="sim-lru-ref" class="sim-tb-cells"></div>
+            </div>
+            <div id="sim-lru-frames-rows" class="sim-tb-frame-rows"></div>
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">F / H</div>
+              <div id="sim-lru-status" class="sim-tb-cells"></div>
+            </div>
+          </div>
+          <div class="sim-algo-stats" id="sim-lru-stats"></div>
+        </div>
+
+        <div class="sim-algo-section" id="sim-opt-section">
+          <div class="sim-algo-header">
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="none" class="sim-algo-icon text-opt">
+              <circle cx="24" cy="22" r="16" stroke="currentColor" stroke-width="3" fill="none" />
+              <path d="M24 14 L25.5 19 L30 19 L26.5 22 L28 27 L24 24 L20 27 L21.5 22 L18 19 L22.5 19 Z"
+                fill="currentColor" />
+            </svg>
+            <span class="sim-algo-name text-opt">OPTIMAL</span>
+            <span class="sim-algo-tagline">Belady's Algorithm</span>
+            <span class="sim-algo-badge" id="sim-opt-badge"></span>
+          </div>
+          <div class="sim-tb-wrap">
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">Ref</div>
+              <div id="sim-opt-ref" class="sim-tb-cells"></div>
+            </div>
+            <div id="sim-opt-frames-rows" class="sim-tb-frame-rows"></div>
+            <div class="sim-tb-row">
+              <div class="sim-tb-label">F / H</div>
+              <div id="sim-opt-status" class="sim-tb-cells"></div>
+            </div>
+          </div>
+          <div class="sim-algo-stats" id="sim-opt-stats"></div>
+        </div>
+
+      </div>
+
+      <div id="sim-winner" class="sim-winner hidden">
+        <div class="winner-inner" id="sim-winner-inner"></div>
+      </div>
+
+      <div id="sim-chart-area" class="sim-chart-area hidden">
+        <div class="demo-label">FAULT COUNT COMPARISON</div>
+        <div class="chart-bars" id="sim-chart-bars"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="sf-line">PAGE//FAULT &nbsp;▓&nbsp; FIFO · LRU · OPTIMAL &nbsp;▓&nbsp; VIRTUAL MEMORY</div>
+    <div class="sf-sub">← → arrow keys step demos · Enter runs simulator</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

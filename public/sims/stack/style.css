@@ -1,0 +1,118 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0d0d0d;
+  color: white;
+  overflow-x: hidden;
+}
+
+#tsparticles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.app {
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #00ff88;
+}
+
+/* CONTROLS */
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+button, input, select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: none;
+}
+
+button {
+  background: #00ff88;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* INFO */
+
+.info {
+  margin-bottom: 15px;
+}
+
+/* LAYOUT */
+
+.main-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.visual-section {
+  flex: 2;
+  background: rgba(20,20,20,0.9);
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 350px;
+}
+
+.code-section {
+  flex: 1;
+  background: rgba(20,20,20,0.9);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* STACK STYLING */
+
+.stack-container {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+  padding-top: 20px;
+}
+
+.stack-node {
+  width: 120px;
+  height: 50px;
+  background: #e0e0e0;
+  border: 3px solid #444;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: black;
+  transition: 0.3s;
+}
+
+.stack-node.top {
+  background: orange;
+}
+
+.top-label {
+  color: #ff4d4d;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.stack-node.pop-animation {
+  animation: popAnim 0.4s ease;
+}
+
+@keyframes popAnim {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); background: red; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+pre {
+  white-space: pre-wrap;
+  color: #00ff88;
+}

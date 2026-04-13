@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disk Scheduling — OS Concepts</title>
+<!-- VISUALIZE IT — Shared Font System -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Platypi:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap"
+  rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ══ SECTION NAV DOTS ══════════════════════════ -->
+<nav id="section-nav" aria-label="Page sections"></nav>
+
+<!-- ══════════════════════════════════════════════
+  S0 — HERO
+══════════════════════════════════════════════ -->
+<section id="s0" data-label="Start">
+<div class="col">
+  <div class="tag r">Operating Systems · Disk I/O</div>
+  <h1 class="display r d1" style="margin-bottom:1.25rem;">
+    Disk Scheduling<br>
+    <em class="hi">From zero to algorithm.</em>
+  </h1>
+  <p class="lead r d2" style="max-width:520px;margin-bottom:3rem;">
+    A mechanical arm physically moves to read your data. When ten programs want data at once, the order you serve them changes everything. This page takes you from the hardware up.
+  </p>
+
+  <div class="card r d3" style="padding:1.5rem;margin-bottom:3rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:.75rem;">
+      <div style="background:var(--s2);padding:1rem;text-align:center;">
+        <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:4px;">FCFS (naive)</div>
+        <div class="mono" style="font-size:2.2rem;font-weight:500;color:var(--red);line-height:1;">640</div>
+        <div style="font-size:11px;color:var(--muted);">tracks moved</div>
+      </div>
+      <div style="background:var(--s2);padding:1rem;text-align:center;">
+        <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:4px;">LOOK (smart)</div>
+        <div class="mono" style="font-size:2.2rem;font-weight:500;color:var(--teal);line-height:1;">153</div>
+        <div style="font-size:11px;color:var(--muted);">tracks moved</div>
+      </div>
+    </div>
+    <p class="body" style="font-size:12px;text-align:center;">Same 8 requests. No hardware change. Just a smarter order — 76% less movement.</p>
+  </div>
+
+  <div class="bob r d4" style="text-align:center;color:var(--muted);">
+    <p class="mono" style="font-size:9px;letter-spacing:0.12em;margin-bottom:6px;">START SCROLLING</p>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto;display:block;">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S1 — DISK STRUCTURE (drill-down)
+══════════════════════════════════════════════ -->
+<section id="s1" data-label="The Disk">
+<div class="col">
+  <div class="tag r">step 1 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">What is a hard disk, physically?</h2>
+  <p class="lead r d2" style="margin-bottom:1.5rem;">
+    Step through the machine layer by layer — from the metal casing down to a single sector. Toggle between the 3D view and the top-view platter diagram.
+  </p>
+
+  <!-- drill stage -->
+  <div id="drill-stage" class="r d3" style="margin-bottom:1.25rem;">
+
+    <!-- view toggle tabs -->
+    <div class="view-tabs">
+      <button class="view-tab active" data-view="perspective" onclick="drillSetView('perspective')">3D — Side view</button>
+      <button class="view-tab"        data-view="top"         onclick="drillSetView('top')">Top view — Platter</button>
+    </div>
+
+    <!-- perspective canvas -->
+    <div class="drill-canvas-layer active" data-view="perspective">
+      <canvas id="drill-perspective" style="display:block;width:100%;"></canvas>
+    </div>
+
+    <!-- top-view canvas -->
+    <div class="drill-canvas-layer" data-view="top">
+      <canvas id="drill-top" style="display:block;width:100%;"></canvas>
+    </div>
+
+    <!-- step pills -->
+    <div id="drill-pills" class="step-pills"></div>
+
+    <!-- caption -->
+    <div id="drill-caption-box"></div>
+  </div>
+
+  <!-- prev / next buttons -->
+  <div style="display:flex;gap:.75rem;margin-bottom:2rem;" class="r d4">
+    <button class="btn" id="drill-prev" onclick="drillStep(-1)" disabled>← Back</button>
+    <button class="btn primary" id="drill-next" onclick="drillStep(1)">Next →</button>
+  </div>
+
+  <!-- three facts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;" class="r d5">
+    <div style="background:var(--s1);padding:1.25rem;">
+      <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem;">PLATTER</p>
+      <p class="body" style="font-size:13px;">Spins at 5400–7200 RPM. Data stored magnetically on the surface.</p>
+    </div>
+    <div style="background:var(--s1);padding:1.25rem;border-left:1px solid var(--border);">
+      <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem;">TRACKS</p>
+      <p class="body" style="font-size:13px;">Concentric rings numbered 0–199. Every byte lives at a specific track.</p>
+    </div>
+    <div style="background:var(--s1);padding:1.25rem;border-left:1px solid var(--border);">
+      <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem;">READ HEAD</p>
+      <p class="body" style="font-size:13px;">A mechanical arm that physically moves between tracks. One track at a time.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S2 — THE PROBLEM
+══════════════════════════════════════════════ -->
+<section id="s2" data-label="Problem">
+<div class="col">
+  <div class="tag r">step 2 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">The problem it creates.</h2>
+  <p class="lead r d2" style="margin-bottom:2rem;">
+    Every time the head moves between tracks, it takes real time. With multiple programs all requesting disk data simultaneously, the OS holds a queue of requests — and the order it serves them determines how far the head travels.
+  </p>
+
+  <div class="cl r d3" style="margin-bottom:1.5rem;">
+    <p class="h3" style="margin-bottom:.4rem;">Seek time — the one cost we control</p>
+    <p class="body">Time for the arm to physically move between tracks. Proportional to distance.</p>
+    <div class="card2" style="padding:.75rem 1rem;margin-top:.75rem;font-family:var(--mono);font-size:12px;">
+      seek distance = |current track − target track|<br>
+      <span style="color:var(--accent2);">e.g. head at 53, request for 183 → |183 − 53| = 130 tracks</span>
+    </div>
+  </div>
+
+  <div class="card r d4" style="padding:1.5rem;margin-bottom:1.5rem;">
+    <p class="mono" style="font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:1rem;">FCFS — NAIVE ORDER — ZIGZAG SEEK PATH</p>
+    <svg viewBox="0 0 620 120" width="100%" style="display:block;border-radius:8px;background:var(--s2);">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#f07b3f" stroke-width="1.5"/>
+        </marker>
+      </defs>
+      <line x1="30" y1="105" x2="590" y2="105" stroke="#262840" stroke-width="1"/>
+      <text x="30"  y="115" font-family="DM Mono" font-size="8" fill="#5a5d7a" text-anchor="middle">0</text>
+      <text x="590" y="115" font-family="DM Mono" font-size="8" fill="#5a5d7a" text-anchor="middle">199</text>
+      <polyline points="179,20 306,45 545,20 134,80 373,40 69,90 379,35 213,70 218,68"
+        fill="none" stroke="#f07b3f" stroke-width="1.5" stroke-linejoin="round" opacity="0.85"/>
+      <circle cx="179" cy="20" r="5" fill="none" stroke="#e4e6f0" stroke-width="1.5"/>
+      <text x="179" y="10" font-family="DM Mono" font-size="8" fill="#5a5d7a" text-anchor="middle">start: 53</text>
+      <circle cx="306" cy="45" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="545" cy="20" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="134" cy="80" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="373" cy="40" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="69"  cy="90" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="379" cy="35" r="3" fill="#f07b3f" opacity="0.8"/>
+      <circle cx="213" cy="70" r="3" fill="#f07b3f" opacity="0.8"/>
+    </svg>
+    <p class="body" style="font-size:12px;margin-top:.75rem;">The head zigzags wildly — 183→37 is a 146-track jump that a smarter order would have avoided.</p>
+  </div>
+
+  <div class="cl-red r d5">
+    <p class="body"><strong>The core problem:</strong> serving requests in the wrong order makes the head travel enormous unnecessary distances. <strong>Disk scheduling is the OS deciding the right order.</strong></p>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S3 — WHAT IS DISK SCHEDULING
+══════════════════════════════════════════════ -->
+<section id="s3" data-label="Disk Scheduling">
+<div class="col">
+  <div class="tag r">step 3 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">So what is disk scheduling?</h2>
+  <p class="lead r d2" style="margin-bottom:2rem;">One definition. Nothing more yet.</p>
+
+  <div class="card r d3" style="padding:2rem;margin-bottom:2rem;border-color:var(--border2);">
+    <p class="serif" style="font-size:1.3rem;font-weight:600;line-height:1.55;margin-bottom:1.25rem;">
+      Disk scheduling is the algorithm the OS uses to decide the <em class="hi">order</em> in which pending disk I/O requests are served — with the goal of minimising total head movement.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+      <div>
+        <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:4px;">OPTIMISES</p>
+        <p class="body" style="font-size:13px;color:var(--teal);">Total seek distance</p>
+      </div>
+      <div>
+        <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:4px;">IGNORES</p>
+        <p class="body" style="font-size:13px;color:var(--muted);">Rotational latency, transfer time</p>
+      </div>
+      <div>
+        <p class="mono" style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:4px;">APPLIES TO</p>
+        <p class="body" style="font-size:13px;color:var(--muted);">HDDs only — SSDs don't need it</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-green r d4">
+    <p class="body">Think of the OS as a dispatcher. The read head is a taxi — it can only be in one place at a time. The dispatcher decides the route through all pending pick-up points to minimise total distance driven.</p>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S4 — KEY TERMS
+══════════════════════════════════════════════ -->
+<section id="s4" data-label="Key Terms">
+<div class="col">
+  <div class="tag r">step 4 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">Four terms. That's all you need.</h2>
+  <p class="lead r d2" style="margin-bottom:2rem;">Every algorithm references these. Know them now, read the rest without friction.</p>
+
+  <div class="term-grid r d3" style="margin-bottom:1.5rem;">
+    <div class="term-cell">
+      <p class="mono" style="font-size:9px;color:var(--accent);letter-spacing:.12em;margin-bottom:.4rem;">SEEK TIME</p>
+      <p class="h3" style="margin-bottom:.3rem;">Head movement time</p>
+      <p class="body" style="font-size:13px;">Time for the arm to move from one track to another. The dominant cost. <code>|from − to|</code></p>
+    </div>
+    <div class="term-cell" style="border-left:1px solid var(--border);">
+      <p class="mono" style="font-size:9px;color:var(--accent);letter-spacing:.12em;margin-bottom:.4rem;">REQUEST QUEUE</p>
+      <p class="h3" style="margin-bottom:.3rem;">Pending I/O list</p>
+      <p class="body" style="font-size:13px;">Track numbers that processes have requested but not yet been served. The scheduler reorders this.</p>
+    </div>
+    <div class="term-cell" style="border-top:1px solid var(--border);">
+      <p class="mono" style="font-size:9px;color:var(--accent);letter-spacing:.12em;margin-bottom:.4rem;">STARVATION</p>
+      <p class="h3" style="margin-bottom:.3rem;">A request never served</p>
+      <p class="body" style="font-size:13px;">When a request waits indefinitely because the algorithm keeps choosing others. A serious failure mode.</p>
+    </div>
+    <div class="term-cell" style="border-top:1px solid var(--border);border-left:1px solid var(--border);">
+      <p class="mono" style="font-size:9px;color:var(--accent);letter-spacing:.12em;margin-bottom:.4rem;">THROUGHPUT</p>
+      <p class="h3" style="margin-bottom:.3rem;">Requests per unit time</p>
+      <p class="body" style="font-size:13px;">How many I/O requests the disk completes in a given time. More = better performance.</p>
+    </div>
+  </div>
+
+  <div class="card2 r d4" style="padding:1rem 1.25rem;">
+    <p class="mono" style="font-size:11px;color:var(--accent2);">// the example used throughout this page</p>
+    <p class="mono" style="font-size:12px;margin-top:.4rem;line-height:1.9;">
+      Head starts at: <span style="color:var(--orange);">track 53</span><br>
+      Request queue: <span style="color:var(--accent2);">98, 183, 37, 122, 14, 124, 65, 67</span><br>
+      Disk range: <span style="color:var(--muted);">0 – 199</span>
+    </p>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S5 — THE ALGORITHMS
+══════════════════════════════════════════════ -->
+<section id="s5" data-label="Algorithms">
+<div class="col">
+  <div class="tag r">step 5 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">The algorithms — one at a time.</h2>
+  <p class="lead r d2" style="margin-bottom:2.5rem;">Each one fixes a specific flaw in the previous. Read them in order.</p>
+
+  <!-- FCFS -->
+  <div class="algo-card r d2" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <span class="mono" style="font-size:18px;font-weight:500;color:var(--red);">FCFS</span>
+        <span class="body" style="font-size:13px;color:var(--muted);">First Come First Served</span>
+      </div>
+      <span class="mono" style="font-size:11px;color:var(--red);">640 tracks</span>
+    </div>
+    <p class="body" style="margin-bottom:.75rem;"><strong>Rule:</strong> Serve requests exactly in the order they arrived. Zero optimisation.</p>
+    <p class="body" style="margin-bottom:.75rem;">Order: 53→98→183→37→122→14→124→65→67</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <span class="pill-good">no starvation</span>
+      <span class="pill-good">simple</span>
+      <span class="pill-bad">worst movement</span>
+      <span class="pill-bad">convoy effect</span>
+    </div>
+  </div>
+
+  <!-- SSTF -->
+  <div class="algo-card r d3" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <span class="mono" style="font-size:18px;font-weight:500;color:var(--yellow);">SSTF</span>
+        <span class="body" style="font-size:13px;color:var(--muted);">Shortest Seek Time First</span>
+      </div>
+      <span class="mono" style="font-size:11px;color:var(--yellow);">236 tracks</span>
+    </div>
+    <p class="body" style="margin-bottom:.75rem;"><strong>Rule:</strong> From current position, always pick the nearest pending request next.</p>
+    <p class="body" style="margin-bottom:.75rem;">Order: 53→65→67→98→122→124→183→37→14</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <span class="pill-good">much less movement</span>
+      <span class="pill-bad">starvation risk</span>
+      <span class="pill-bad">not fair</span>
+    </div>
+  </div>
+
+  <!-- SCAN -->
+  <div class="algo-card r d4" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <span class="mono" style="font-size:18px;font-weight:500;color:var(--accent2);">SCAN</span>
+        <span class="body" style="font-size:13px;color:var(--muted);">Elevator Algorithm</span>
+      </div>
+      <span class="mono" style="font-size:11px;color:var(--accent2);">187 tracks</span>
+    </div>
+    <p class="body" style="margin-bottom:.75rem;"><strong>Rule:</strong> Sweep one direction serving everything; hit the disk edge; reverse.</p>
+    <p class="body" style="margin-bottom:.75rem;">Order: 53→65→67→98→122→124→183→<span style="color:var(--muted);">199 (edge)</span>→37→14</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <span class="pill-good">no starvation</span>
+      <span class="pill-good">fair</span>
+      <span class="pill-bad">wastes travel to edge</span>
+    </div>
+  </div>
+
+  <!-- LOOK -->
+  <div class="algo-card r d5" style="margin-bottom:1rem;border-color:var(--teal);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <span class="mono" style="font-size:18px;font-weight:500;color:var(--teal);">LOOK ★</span>
+        <span class="body" style="font-size:13px;color:var(--muted);">Smart Elevator</span>
+      </div>
+      <span class="mono" style="font-size:11px;color:var(--teal);">153 tracks — best</span>
+    </div>
+    <p class="body" style="margin-bottom:.75rem;"><strong>Rule:</strong> Like SCAN but stops at the last actual request — no wasted travel to disk edges.</p>
+    <p class="body" style="margin-bottom:.75rem;">Order: 53→65→67→98→122→124→<span style="color:var(--teal);">183</span>→37→14</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <span class="pill-good">no starvation</span>
+      <span class="pill-good">efficient</span>
+      <span class="pill-good">no wasted edge travel</span>
+    </div>
+  </div>
+
+  <!-- C-SCAN + C-LOOK -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="r">
+    <div class="algo-card">
+      <span class="mono" style="font-size:15px;font-weight:500;color:var(--orange);display:block;margin-bottom:.5rem;">C-SCAN</span>
+      <p class="body" style="font-size:13px;margin-bottom:.5rem;"><strong>Rule:</strong> One-way sweep only. Jump back to track 0 without serving on return. Uniform wait time.</p>
+      <p class="mono" style="font-size:11px;color:var(--orange);">382 tracks</p>
+      <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+        <span class="pill-good">uniform wait</span>
+        <span class="pill-mid">higher movement</span>
+      </div>
+    </div>
+    <div class="algo-card">
+      <span class="mono" style="font-size:15px;font-weight:500;color:var(--teal);display:block;margin-bottom:.5rem;">C-LOOK</span>
+      <p class="body" style="font-size:13px;margin-bottom:.5rem;"><strong>Rule:</strong> Like C-SCAN but jumps to lowest pending request (not track 0). Best of both worlds.</p>
+      <p class="mono" style="font-size:11px;color:var(--teal);">157 tracks</p>
+      <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+        <span class="pill-good">uniform wait</span>
+        <span class="pill-good">no edge waste</span>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S6 — THE SET PIECE
+══════════════════════════════════════════════ -->
+<section id="s6" data-label="Watch It Live">
+<div class="col">
+  <div class="tag r">step 6 of 8 — the set piece</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">Watch the head move.</h2>
+  <p class="lead r d2" style="margin-bottom:2rem;">
+    Same 8 requests. Each algorithm. Step through it — the disk arm and track axis move together so you see both representations of the same seek.
+  </p>
+
+  <!-- algo selector -->
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;" class="r d3" id="sp-algo-btns">
+    <button class="btn primary" onclick="spSetAlgo('FCFS')"  id="sp-btn-FCFS">FCFS</button>
+    <button class="btn"         onclick="spSetAlgo('SSTF')"  id="sp-btn-SSTF">SSTF</button>
+    <button class="btn"         onclick="spSetAlgo('SCAN')"  id="sp-btn-SCAN">SCAN</button>
+    <button class="btn"         onclick="spSetAlgo('LOOK')"  id="sp-btn-LOOK">LOOK</button>
+    <button class="btn"         onclick="spSetAlgo('CSCAN')" id="sp-btn-CSCAN">C-SCAN</button>
+    <button class="btn"         onclick="spSetAlgo('CLOOK')" id="sp-btn-CLOOK">C-LOOK</button>
+  </div>
+
+  <!-- dual visual -->
+  <div class="r d4" style="display:grid;grid-template-columns:200px 1fr;gap:1.5rem;align-items:center;margin-bottom:1.5rem;">
+
+    <!-- disk SVG -->
+    <svg id="sp-disk-svg" viewBox="0 0 400 400" width="100%" style="display:block;">
+      <circle cx="200" cy="200" r="175" fill="#11121a" stroke="#262840" stroke-width="1"/>
+      <circle cx="200" cy="200" r="148" fill="none" stroke="#1e2030" stroke-width="0.75"/>
+      <circle cx="200" cy="200" r="120" fill="none" stroke="#1e2030" stroke-width="0.75"/>
+      <circle cx="200" cy="200" r="92"  fill="none" stroke="#1e2030" stroke-width="0.75"/>
+      <circle cx="200" cy="200" r="64"  fill="none" stroke="#1e2030" stroke-width="0.75"/>
+      <circle cx="200" cy="200" r="36"  fill="none" stroke="#1e2030" stroke-width="0.75"/>
+      <circle cx="200" cy="200" r="20"  fill="#1e2030" stroke="#262840" stroke-width="1"/>
+      <circle cx="200" cy="200" r="6"   fill="#5b8dee"/>
+      <!-- arm group -->
+      <g id="sp-arm">
+        <line x1="200" y1="200" x2="200" y2="30" stroke="#8db4f5" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+        <circle id="sp-arm-tip" cx="200" cy="30" r="6" fill="#f07b3f" style="filter:drop-shadow(0 0 6px #f07b3f)"/>
+      </g>
+      <!-- current track ring -->
+      <circle id="sp-track-ring" cx="200" cy="200" r="170" fill="none" stroke="#f07b3f" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.5"/>
+    </svg>
+
+    <!-- axis + stats + log -->
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span class="mono" style="font-size:9px;color:var(--muted);">Track 0</span>
+        <span class="mono" style="font-size:9px;color:var(--muted);">Track 199</span>
+      </div>
+      <div class="axis-wrap" id="sp-axis" style="margin-bottom:1rem;">
+        <div class="axis-line"></div>
+        <div id="sp-axis-reqs"></div>
+        <div class="axis-head" id="sp-axis-head" style="left:26.6%;">
+          <div class="axis-head-lbl" id="sp-axis-lbl">53</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem;">
+        <div class="card2" style="padding:.75rem;text-align:center;">
+          <div class="mono" style="font-size:9px;color:var(--muted);margin-bottom:2px;">STEP</div>
+          <div id="sp-step-counter" class="mono" style="font-size:1.4rem;font-weight:500;">0 / 0</div>
+        </div>
+        <div class="card2" style="padding:.75rem;text-align:center;">
+          <div class="mono" style="font-size:9px;color:var(--muted);margin-bottom:2px;">TOTAL MOVEMENT</div>
+          <div id="sp-total" class="mono" style="font-size:1.4rem;font-weight:500;color:var(--orange);">0</div>
+        </div>
+      </div>
+
+      <div id="sp-log"></div>
+    </div>
+  </div>
+
+  <!-- controls -->
+  <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;" class="r d5">
+    <button class="btn primary" id="sp-next-btn" onclick="spNext()">Next step →</button>
+    <button class="btn" onclick="spReset()">↺ Reset</button>
+    <button class="btn" onclick="spAutoPlay()" id="sp-auto-btn">▶ Auto-play</button>
+    <span id="sp-algo-label" class="mono" style="font-size:11px;color:var(--muted);flex:1;text-align:right;"></span>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S7 — SCOREBOARD
+══════════════════════════════════════════════ -->
+<section id="s7" data-label="Scoreboard">
+<div class="col">
+  <div class="tag r">step 7 of 8</div>
+  <h2 class="h2 r d1" style="margin-bottom:.75rem;">The scoreboard.</h2>
+  <p class="lead r d2" style="margin-bottom:2rem;">Same 8 requests. All 6 algorithms. Side by side.</p>
+
+  <div class="card r d3" style="padding:1.5rem;margin-bottom:2rem;">
+    <div style="display:flex;flex-direction:column;gap:.75rem;" id="scoreboard"></div>
+  </div>
+
+  <div class="card r d4" style="padding:0;overflow:hidden;">
+    <table class="ctab">
+      <thead>
+        <tr>
+          <th>Algorithm</th>
+          <th>Movement</th>
+          <th>Starvation</th>
+          <th>Best use case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono" style="color:var(--red);">FCFS</td><td><span class="pill-bad">640</span></td><td><span class="pill-good">None</span></td><td class="body" style="font-size:12px;">Light / simple systems</td></tr>
+        <tr><td class="mono" style="color:var(--yellow);">SSTF</td><td><span class="pill-mid">236</span></td><td><span class="pill-bad">Yes</span></td><td class="body" style="font-size:12px;">Low latency, predictable load</td></tr>
+        <tr><td class="mono" style="color:var(--accent2);">SCAN</td><td><span class="pill-mid">187</span></td><td><span class="pill-good">None</span></td><td class="body" style="font-size:12px;">Heavy, uniform load</td></tr>
+        <tr class="best-row"><td class="mono" style="color:var(--teal);">LOOK ★</td><td><span class="pill-good">153</span></td><td><span class="pill-good">None</span></td><td class="body" style="font-size:12px;">General purpose best choice</td></tr>
+        <tr><td class="mono" style="color:var(--orange);">C-SCAN</td><td><span class="pill-mid">382</span></td><td><span class="pill-good">None</span></td><td class="body" style="font-size:12px;">Uniform wait time needed</td></tr>
+        <tr><td class="mono" style="color:var(--teal);">C-LOOK</td><td><span class="pill-good">157</span></td><td><span class="pill-good">None</span></td><td class="body" style="font-size:12px;">Uniform + efficient</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  S8 — SIMULATOR CTA
+══════════════════════════════════════════════ -->
+<section id="s8" data-label="Try It" style="border-bottom:none;">
+<div class="col">
+  <div class="cta-wrap r">
+    <div class="tag" style="margin-bottom:1.25rem;">step 8 of 8 — you've earned this</div>
+    <h2 class="h2" style="margin-bottom:1rem;color:var(--text);">Now try your own numbers.</h2>
+    <p class="lead" style="margin-bottom:2rem;max-width:480px;margin-left:auto;margin-right:auto;">
+      You've watched the hardcoded example. You know why LOOK beats FCFS by 76%. Now put in your own queue and test your predictions.
+    </p>
+    <a href="simulator.html" class="cta-btn">
+      Open the disk scheduler
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <p class="mono" style="font-size:10px;color:var(--muted);margin-top:1.5rem;letter-spacing:0.08em;">NO LOGIN · NO INSTALL · RUNS IN BROWSER</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem;" class="r d2">
+    <a href="cpu.html" style="text-decoration:none;">
+      <div class="card" style="padding:1.25rem;">
+        <p class="mono" style="font-size:9px;color:var(--muted);margin-bottom:.4rem;">01 — CPU SCHEDULING</p>
+        <p class="h3">FCFS, SJF, Round Robin, Priority</p>
+      </div>
+    </a>
+    <a href="page.html" style="text-decoration:none;">
+      <div class="card" style="padding:1.25rem;">
+        <p class="mono" style="font-size:9px;color:var(--muted);margin-bottom:.4rem;">03 — PAGE REPLACEMENT</p>
+        <p class="h3">FIFO, LRU, Optimal, Belady's</p>
+      </div>
+    </a>
+  </div>
+</div>
+</section>
+
+<footer style="padding:2rem;text-align:center;border-top:1px solid var(--border);">
+  <p class="mono" style="font-size:10px;color:var(--muted);letter-spacing:0.08em;">Operating Systems · Disk Scheduling · For Engineering Students</p>
+</footer>
+
+<!-- scripts at end -->
+<script src="drill.js"></script>
+<script src="setpiece.js"></script>
+</body>
+</html>

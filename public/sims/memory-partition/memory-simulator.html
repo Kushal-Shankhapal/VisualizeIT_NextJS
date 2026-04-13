@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memory Partition Simulator — VisualizeIT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Platypi:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+:root {
+  --font-heading: 'Platypi', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+body, body * {
+  font-family: var(--font-body) !important;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading) !important;
+}
+canvas, pre, code, [class*="mono"], [class*="terminal"], [class*="code"] {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace !important;
+}
+
+:root {
+  --bg: #0d1117;
+  --bg2: #111827;
+  --bg3: #161d2e;
+  --bg4: #1a2236;
+  --border: #1e3a5f;
+  --border2: #2563eb;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --orange: #f97316;
+  --amber: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --purple: #7c3aed;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --glow-b: rgba(59,130,246,0.15);
+  --glow-c: rgba(6,182,212,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(30,58,95,0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,58,95,0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── TOPBAR ─────────────────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,17,23,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.tb-brand {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 0.15em;
+  text-decoration: none;
+}
+
+.tb-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+
+.tb-sep { color: var(--text3); font-size: 0.75rem; }
+
+.tb-back {
+  font-size: 0.65rem;
+  color: var(--text2);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.7rem;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+.tb-back:hover { color: var(--cyan); border-color: var(--cyan); }
+
+/* Mode tabs */
+.mode-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px;
+}
+
+.mtab {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.9rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text3);
+  transition: all 0.2s;
+}
+
+.mtab.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(59,130,246,0.3);
+}
+
+.mtab:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+/* ─── MAIN LAYOUT ────────────────────────── */
+.sim-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 260px;
+  gap: 0;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* ─── LEFT PANEL ─────────────────────────── */
+.panel-left {
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.ps-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ps-title::before {
+  content: '';
+  width: 12px;
+  height: 1px;
+  background: var(--blue);
+}
+
+label {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--text2);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.05em;
+}
+
+input[type=number], input[type=text], select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.45rem 0.6rem;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.6rem;
+}
+
+input[type=number]:focus, select:focus { border-color: var(--blue); }
+
+.btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-primary { background: var(--blue); color: #fff; border-color: var(--cyan); }
+.btn-primary:hover { background: var(--cyan); box-shadow: 0 0 12px rgba(6,182,212,0.3); }
+.btn-danger  { background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.4); margin-top: 0.4rem; }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn-warn    { background: rgba(249,115,22,0.15); color: var(--orange); border-color: rgba(249,115,22,0.4); }
+.btn-warn:hover { background: rgba(249,115,22,0.25); }
+.btn-sm { font-size: 0.7rem; padding: 0.3rem 0.6rem; width: auto; }
+
+/* Process queue */
+.process-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.proc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.65rem;
+  border-left: 3px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: slideIn 0.3s ease;
+}
+
+.proc-item:hover { border-color: currentColor; opacity: 0.8; }
+.proc-item.selected-proc { box-shadow: 0 0 8px currentColor; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.proc-name { font-weight: 600; color: #fff; }
+.proc-size { color: var(--text2); }
+.proc-status { font-size: 0.55rem; letter-spacing: 0.05em; }
+
+.proc-del {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.proc-del:hover { color: var(--red); }
+
+/* Fixed mode partition config */
+.partition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.part-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.62rem;
+  color: var(--text2);
+}
+
+.part-row input { margin-bottom: 0; flex: 1; }
+
+/* ─── CENTER — MEMORY VIZ ─────────────────── */
+.panel-center {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.mem-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mem-header-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.mem-addr-range {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+}
+
+.mem-viz-wrap {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  padding: 1.5rem;
+  gap: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Vertical memory bar */
+.mem-bar-container {
+  display: flex;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.mem-bar {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg3);
+  min-height: 400px;
+  position: relative;
+}
+
+.mem-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: filter 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.mem-segment:last-child { border-bottom: none; }
+.mem-segment:hover { filter: brightness(1.2); }
+
+.ms-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.5rem;
+  color: rgba(255,255,255,0.75);
+  text-align: center;
+  padding: 2px;
+  position: relative;
+  z-index: 1;
+  font-weight: 600;
+}
+
+.ms-size {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.45rem;
+  color: rgba(255,255,255,0.45);
+  position: relative;
+  z-index: 1;
+}
+
+/* FIX 8: Trailing free space (green tint left border) */
+.seg-free {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-left: 2px solid rgba(16,185,129,0.45);
+}
+
+/* FIX 8: External fragmentation hole (amber, distinct from free) */
+.seg-hole {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(245,158,11,0.05),
+    rgba(245,158,11,0.05) 3px,
+    rgba(245,158,11,0.13) 3px,
+    rgba(245,158,11,0.13) 6px
+  );
+  border: 1px dashed rgba(245,158,11,0.4);
+  border-left: 3px solid var(--amber);
+}
+
+/* Internal fragmentation in fixed mode */
+.seg-frag {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(245,158,11,0.08),
+    rgba(245,158,11,0.08) 3px,
+    rgba(245,158,11,0.18) 3px,
+    rgba(245,158,11,0.18) 6px
+  );
+  border-left: 3px solid var(--amber);
+}
+
+.seg-os {
+  background: linear-gradient(135deg, rgba(29,78,216,0.5), rgba(29,78,216,0.2));
+}
+
+/* Address ruler */
+.addr-ruler {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.48rem;
+  color: var(--text3);
+  min-height: 400px;
+  position: relative;
+}
+
+.ruler-tick {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  transform: translateY(-50%);
+}
+
+.ruler-tick::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Memory block detail panel */
+.block-detail {
+  width: 180px;
+  flex-shrink: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  height: fit-content;
+  position: sticky;
+  top: 0;
+}
+
+.bd-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text2);
+}
+
+.bd-row:last-child { border-bottom: none; }
+.bd-val { color: var(--text); font-weight: 500; }
+
+/* ─── RIGHT PANEL — STATS ─────────────────── */
+.panel-right {
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.stat-card {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.stat-card-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.stat-big {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+
+.stat-label-small {
+  font-size: 0.6rem;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+}
+
+/* Utilization bar */
+.util-bar-wrap {
+  margin-top: 0.75rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.util-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  transition: width 0.5s ease;
+  border-radius: 3px;
+}
+
+/* Log */
+.event-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.log-entry {
+  font-size: 0.58rem;
+  color: var(--text2);
+  padding: 0.3rem 0.5rem;
+  background: var(--bg3);
+  border-radius: 2px;
+  border-left: 2px solid var(--border);
+  line-height: 1.5;
+  animation: fadeIn 0.3s ease;
+}
+
+.log-entry.log-alloc  { border-color: var(--green); }
+.log-entry.log-dealloc{ border-color: var(--orange); }
+.log-entry.log-compact{ border-color: var(--cyan); }
+.log-entry.log-fail   { border-color: var(--red); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── BUDDY TREE ─────────────────────────── */
+.buddy-tree-panel {
+  padding: 1rem;
+  flex: 1;
+  overflow: auto;
+}
+
+/* FIX 5: position relative for SVG overlay */
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.tree-level {
+  display: flex;
+  gap: 3px;
+  position: relative;
+}
+
+.tree-node {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 2px;
+  text-align: center;
+  position: relative;
+  white-space: pre-line;
+}
+
+.tree-node.tn-free  { background: rgba(255,255,255,0.03); color: var(--text3); border-style: dashed; }
+.tree-node.tn-split { background: rgba(59,130,246,0.05); color: var(--text3); border-color: rgba(59,130,246,0.3); }
+.tree-node.tn-alloc { color: rgba(255,255,255,0.85); font-weight: 600; }
+
+/* ─── COLOR PALETTE ─────────────────────── */
+.process-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
+.pc-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ─── FIX 7: REJECTION GHOST ────────────── */
+.rejected-ghost {
+  pointer-events: none;
+  z-index: 5;
+  position: relative;
+}
+
+/* ─── SCROLLBAR ──────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+
+/* ─── TOOLTIP ────────────────────────────── */
+.tooltip {
+  position: fixed;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text);
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  max-width: 180px;
+  line-height: 1.6;
+}
+
+/* ─── RESPONSIVE ─────────────────────────── */
+@media (max-width: 900px) {
+  .sim-layout { grid-template-columns: 1fr; }
+  .panel-left, .panel-right { max-height: 280px; }
+}
+</style>
+</head>
+<body>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- ─── TOPBAR ─────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="tb-back">← Concept</a>
+    <a href="#" class="tb-brand">VISUALIZE//IT</a>
+    <span class="tb-sep">/</span>
+    <span class="tb-title">MEMORY//PARTITION SIMULATOR</span>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mtab active" onclick="setMode('fixed')" id="tab-fixed">Fixed</button>
+    <button class="mtab" onclick="setMode('dynamic')" id="tab-dynamic">Dynamic</button>
+    <button class="mtab" onclick="setMode('buddy')" id="tab-buddy">Buddy</button>
+  </div>
+</div>
+
+<!-- ─── MAIN SIM LAYOUT ───────────────────── -->
+<div class="sim-layout">
+
+  <!-- ═══ LEFT PANEL ═══ -->
+  <div class="panel-left">
+
+    <!-- Memory Config -->
+    <div class="panel-section">
+      <div class="ps-title">Memory Config</div>
+      <label>Total Memory (KB)</label>
+      <input type="number" id="total-mem" value="512" min="64" max="4096" step="64" />
+
+      <!-- Fixed mode: partition setup -->
+      <div id="fixed-config">
+        <label>Number of Partitions</label>
+        <input type="number" id="num-partitions" value="4" min="2" max="8" />
+        <label>Partition Type</label>
+        <select id="partition-type">
+          <option value="equal">Equal Sizes</option>
+          <option value="custom">Custom Sizes</option>
+        </select>
+        <div id="custom-partitions" style="display:none;">
+          <div class="partition-list" id="partition-inputs"></div>
+        </div>
+        <button class="btn btn-primary" onclick="initFixed()">INITIALIZE MEMORY</button>
+      </div>
+
+      <!-- Dynamic mode -->
+      <div id="dynamic-config" style="display:none;">
+        <label>Placement Algorithm</label>
+        <select id="placement-algo">
+          <option value="first">First Fit</option>
+          <option value="best">Best Fit</option>
+          <option value="worst">Worst Fit</option>
+          <option value="next">Next Fit</option>
+        </select>
+        <button class="btn btn-primary" onclick="initDynamic()">INITIALIZE MEMORY</button>
+        <button class="btn btn-warn" onclick="compact()" style="margin-top:0.4rem;">&#x2B21; COMPACT MEMORY</button>
+      </div>
+
+      <!-- Buddy mode -->
+      <div id="buddy-config" style="display:none;">
+        <div style="font-size:0.6rem;color:var(--text3);margin-bottom:0.5rem;">* Memory must be power of 2</div>
+        <button class="btn btn-primary" onclick="initBuddy()">INITIALIZE MEMORY</button>
+      </div>
+    </div>
+
+    <!-- FIX 9: Preset Scenarios -->
+    <div class="panel-section" id="preset-section">
+      <div class="ps-title">Preset Scenarios</div>
+      <select id="preset-select" onchange="loadPreset(this.value)"></select>
+    </div>
+
+    <!-- Add Process -->
+    <div class="panel-section">
+      <div class="ps-title">Add Process</div>
+      <label>Process Name</label>
+      <input type="text" id="proc-name" value="P1" maxlength="8" />
+      <label>Process Size (KB)</label>
+      <input type="number" id="proc-size" value="80" min="1" />
+      <button class="btn btn-primary" onclick="addProcess()">ALLOCATE &#x25B6;</button>
+    </div>
+
+    <!-- Process Queue -->
+    <div class="panel-section" style="flex:1;">
+      <div class="ps-title">Process Queue</div>
+      <div class="process-list" id="proc-list">
+        <div style="font-size:0.6rem;color:var(--text3);text-align:center;padding:1rem;">No processes allocated.</div>
+      </div>
+    </div>
+
+    <!-- Legend (FIX 8: updated) -->
+    <div class="panel-section">
+      <div class="ps-title">Legend</div>
+      <div style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.6rem;color:var(--text2);">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:14px;height:14px;border-radius:2px;background:rgba(29,78,216,0.5);"></div>OS Kernel
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:14px;height:14px;border-radius:2px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.12);border-left:2px solid rgba(16,185,129,0.45);"></div>Available Free Space
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:14px;height:14px;border-radius:2px;background:repeating-linear-gradient(45deg,rgba(245,158,11,0.08),rgba(245,158,11,0.08) 3px,rgba(245,158,11,0.18) 3px,rgba(245,158,11,0.18) 6px);border-left:3px solid var(--amber);"></div>Internal Frag (Fixed)
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:14px;height:14px;border-radius:2px;background:repeating-linear-gradient(45deg,rgba(245,158,11,0.05),rgba(245,158,11,0.05) 3px,rgba(245,158,11,0.13) 3px,rgba(245,158,11,0.13) 6px);border:1px dashed rgba(245,158,11,0.4);border-left:3px solid var(--amber);"></div>Ext. Fragment Hole (Dynamic)
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:14px;height:14px;border-radius:2px;background:linear-gradient(135deg,rgba(16,185,129,0.5),rgba(16,185,129,0.2));"></div>Allocated (Process)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CENTER PANEL ═══ -->
+  <div class="panel-center">
+    <div class="mem-header">
+      <div>
+        <div class="mem-header-title">// MEMORY LAYOUT</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:var(--text2);margin-top:0.15rem;" id="mode-label">MODE: FIXED PARTITIONING</div>
+      </div>
+      <div class="mem-addr-range" id="addr-range">0x0000 → 0x<span id="max-addr">1FFF</span></div>
+    </div>
+
+    <div class="mem-viz-wrap">
+      <div class="mem-bar-container">
+        <!-- Address ruler -->
+        <div class="addr-ruler" id="addr-ruler"></div>
+        <!-- Memory bar -->
+        <div class="mem-bar" id="mem-bar">
+          <div class="mem-segment seg-os" style="flex:1;min-height:40px;">
+            <span class="ms-label">Initializing…</span>
+          </div>
+        </div>
+        <!-- Block detail -->
+        <div class="block-detail">
+          <div class="bd-title">// Block Info</div>
+          <div id="block-info">
+            <div style="font-size:0.6rem;color:var(--text3);">Click a memory block to inspect it.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buddy tree (hidden by default) -->
+      <div id="buddy-tree-wrap" style="display:none;flex:1;overflow:auto;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.15em;color:var(--text3);margin-bottom:0.75rem;text-transform:uppercase;">// Buddy Tree — Split Hierarchy</div>
+        <div class="tree-container" id="buddy-tree"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT PANEL ═══ -->
+  <div class="panel-right">
+
+    <!-- Utilization -->
+    <div class="stat-card">
+      <div class="stat-card-title">Utilization</div>
+      <div class="stat-big" id="stat-util" style="color:var(--cyan);">0%</div>
+      <div class="stat-label-small">of total memory in use</div>
+      <div class="util-bar-wrap">
+        <div class="util-bar-fill" id="util-bar" style="width:0%;"></div>
+      </div>
+    </div>
+
+    <!-- Fragmentation -->
+    <div class="stat-card">
+      <div class="stat-card-title" id="frag-label">Internal Fragmentation</div>
+      <div class="stat-big" id="stat-frag" style="color:var(--amber);">0 KB</div>
+      <div class="stat-label-small" id="frag-sub">wasted inside partitions</div>
+    </div>
+
+    <!-- Holes (Dynamic) -->
+    <div class="stat-card" id="holes-card" style="display:none;">
+      <div class="stat-card-title">Free Holes</div>
+      <div class="stat-big" id="stat-holes" style="color:var(--text);">0</div>
+      <div class="stat-label-small">external fragments between blocks</div>
+    </div>
+
+    <!-- Summary -->
+    <div class="stat-card">
+      <div class="stat-card-title">Memory Summary</div>
+      <div class="bd-row"><span>Total</span><span class="bd-val" id="s-total">—</span></div>
+      <div class="bd-row"><span>OS Reserved</span><span class="bd-val" id="s-os">64 KB</span></div>
+      <div class="bd-row"><span>Allocated</span><span class="bd-val" id="s-alloc" style="color:var(--green);">0 KB</span></div>
+      <div class="bd-row"><span>Free</span><span class="bd-val" id="s-free">—</span></div>
+      <div class="bd-row"><span>Wasted</span><span class="bd-val" id="s-wasted" style="color:var(--amber);">0 KB</span></div>
+    </div>
+
+    <!-- Event Log -->
+    <div class="panel-section" style="flex-shrink:0;">
+      <div class="ps-title">Event Log</div>
+    </div>
+    <div class="event-log" id="event-log">
+      <div class="log-entry">System ready. Preset loaded.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════════════════════
+const OS_SIZE = 64;
+
+const COLORS = [
+  { bg: 'rgba(16,185,129,0.35)',  border: '#10b981', text: '#6ee7b7' },
+  { bg: 'rgba(249,115,22,0.35)',  border: '#f97316', text: '#fdba74' },
+  { bg: 'rgba(124,58,237,0.35)', border: '#7c3aed', text: '#c4b5fd' },
+  { bg: 'rgba(239,68,68,0.35)',   border: '#ef4444', text: '#fca5a5' },
+  { bg: 'rgba(234,179,8,0.35)',   border: '#eab308', text: '#fde047' },
+  { bg: 'rgba(14,165,233,0.35)',  border: '#0ea5e9', text: '#7dd3fc' },
+  { bg: 'rgba(236,72,153,0.35)', border: '#ec4899', text: '#f9a8d4' },
+  { bg: 'rgba(20,184,166,0.35)', border: '#14b8a6', text: '#5eead4' },
+];
+
+let currentMode    = 'fixed';
+let totalMem       = 512;
+let processCounter = 1;
+let colorIndex     = 0;
+let nextFitPointer = 0;   // FIX 2
+let isAnimating    = false; // FIX 3: prevent double-click during scan
+
+// Memory segments: { id, type: 'os'|'process'|'free'|'frag'|'hole', label, size, color?, pid? }
+let segments    = [];
+let partitions  = [];
+let processes   = [];
+let buddyRoot   = null;
+let buddyAllocations = [];
+
+// ═══════════════════════════════════════════════════════════
+// MODE SWITCHING  (FIX 10: reset counter + name)
+// ═══════════════════════════════════════════════════════════
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+  document.getElementById('fixed-config').style.display   = mode === 'fixed'   ? '' : 'none';
+  document.getElementById('dynamic-config').style.display = mode === 'dynamic' ? '' : 'none';
+  document.getElementById('buddy-config').style.display   = mode === 'buddy'   ? '' : 'none';
+  document.getElementById('holes-card').style.display     = mode === 'dynamic' ? '' : 'none';
+  document.getElementById('buddy-tree-wrap').style.display = mode === 'buddy'  ? '' : 'none';
+
+  const labels = { fixed: 'FIXED PARTITIONING', dynamic: 'DYNAMIC PARTITIONING', buddy: 'BUDDY SYSTEM' };
+  document.getElementById('mode-label').textContent = 'MODE: ' + labels[mode];
+
+  const fragLabel = { fixed: 'Internal Fragmentation', dynamic: 'External Fragmentation', buddy: 'Internal Fragmentation' };
+  const fragSub   = { fixed: 'wasted inside partitions', dynamic: 'KB between allocated blocks', buddy: 'block rounding overhead' };
+  document.getElementById('frag-label').textContent = fragLabel[mode];
+  document.getElementById('frag-sub').textContent   = fragSub[mode];
+
+  segments   = [];
+  processes  = [];
+  partitions = [];
+  colorIndex = 0;
+
+  // FIX 10: reset process counter and name
+  processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  nextFitPointer = 0; // FIX 2
+  isAnimating = false;
+
+  renderProcList();
+
+  // FIX 9: update preset dropdown for this mode
+  updatePresetSelect();
+
+  if (mode === 'fixed')   loadPresetFixed();
+  if (mode === 'dynamic') loadPresetDynamic();
+  if (mode === 'buddy')   loadPresetBuddy();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FIXED MODE
+// ═══════════════════════════════════════════════════════════
+function initFixed() {
+  totalMem = parseInt(document.getElementById('total-mem').value) || 512;
+  const nPart = parseInt(document.getElementById('num-partitions').value) || 4;
+  const type  = document.getElementById('partition-type').value;
+  const avail = totalMem - OS_SIZE;
+  partitions  = [];
+
+  if (type === 'equal') {
+    const sz = Math.floor(avail / nPart);
+    for (let i = 0; i < nPart; i++) partitions.push({ size: sz, pid: null });
+  } else {
+    const inputs = document.querySelectorAll('#partition-inputs input');
+    inputs.forEach(inp => {
+      const sz = parseInt(inp.value) || 64;
+      partitions.push({ size: sz, pid: null });
+    });
+  }
+
+  segments  = [];
+  processes = [];
+  colorIndex = 0;
+  renderFixed();
+  updateStats();
+  log('Memory initialized: ' + totalMem + 'KB, ' + partitions.length + ' partitions', 'log-alloc');
+}
+
+function renderFixed() {
+  segments = [];
+  segments.push({ type: 'os', label: 'OS', size: OS_SIZE });
+  partitions.forEach((p, i) => {
+    if (p.pid) {
+      const proc = processes.find(pr => pr.pid === p.pid);
+      segments.push({ type: 'process', label: proc.name, size: proc.size, color: proc.color, pid: p.pid });
+      const waste = p.size - proc.size;
+      if (waste > 0) segments.push({ type: 'frag', label: '\u26A0 ' + waste + 'KB wasted', size: waste });
+    } else {
+      segments.push({ type: 'free', label: 'Part ' + (i + 1) + ' (free)', size: p.size });
+    }
+  });
+  renderMemBar();
+}
+
+function addProcessFixed(name, size) {
+  const part = partitions.find(p => !p.pid && p.size >= size);
+  if (!part) {
+    log('Cannot allocate ' + name + ' (' + size + 'KB): no suitable partition', 'log-fail');
+    return false;
+  }
+  const color = COLORS[colorIndex % COLORS.length];
+  colorIndex++;
+  const pid  = 'pid_' + Date.now();
+  const proc = { pid, name, size, color, status: 'allocated' };
+  processes.push(proc);
+  part.pid = pid;
+  renderFixed();
+  updateStats();
+  log('Allocated ' + name + ' (' + size + 'KB) \u2192 partition ' + part.size + 'KB', 'log-alloc');
+  return true;
+}
+
+function deallocFixed(pid) {
+  const part = partitions.find(p => p.pid === pid);
+  if (part) part.pid = null;
+  processes = processes.filter(p => p.pid !== pid);
+  renderFixed();
+  updateStats();
+  log('Deallocated process', 'log-dealloc');
+}
+
+function loadPresetFixed() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  document.getElementById('num-partitions').value = 4;
+  document.getElementById('partition-type').value = 'equal';
+  partitions = [
+    { size: 112, pid: null },
+    { size: 112, pid: null },
+    { size: 112, pid: null },
+    { size: 112, pid: null }
+  ];
+  segments = [{ type: 'os', label: 'OS', size: OS_SIZE }];
+  partitions.forEach((p, i) => segments.push({ type: 'free', label: 'Part ' + (i + 1), size: p.size }));
+  processes = []; colorIndex = 0;
+  renderMemBar();
+  updateStats();
+
+  setTimeout(function() {
+    addProcessFixed('P1', 80);
+    setTimeout(function() { addProcessFixed('P2', 100); }, 300);
+  }, 200);
+}
+
+// FIX 9: Severe Fragmentation preset
+function loadPresetFixedSevere() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  partitions = [
+    { size: 112, pid: null },
+    { size: 112, pid: null },
+    { size: 112, pid: null },
+    { size: 112, pid: null }
+  ];
+  segments = [{ type: 'os', label: 'OS', size: OS_SIZE }];
+  partitions.forEach((p, i) => segments.push({ type: 'free', label: 'Part ' + (i + 1), size: p.size }));
+  processes = []; colorIndex = 0; processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  renderMemBar(); updateStats();
+
+  setTimeout(function() {
+    addProcessFixed('P1', 22);
+    setTimeout(function() { addProcessFixed('P2', 18); }, 200);
+    setTimeout(function() { addProcessFixed('P3', 25); }, 400);
+    setTimeout(function() { addProcessFixed('P4', 20); }, 600);
+  }, 200);
+  log('Severe Fragmentation: small processes in large partitions.', 'log-fail');
+}
+
+// FIX 9: Overflow Attempt preset
+function loadPresetFixedOverflow() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  partitions = [
+    { size: 96, pid: null },
+    { size: 96, pid: null },
+    { size: 96, pid: null }
+  ];
+  segments = [{ type: 'os', label: 'OS', size: OS_SIZE }];
+  partitions.forEach((p, i) => segments.push({ type: 'free', label: 'Part ' + (i + 1), size: p.size }));
+  processes = []; colorIndex = 0; processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  document.getElementById('proc-size').value = 120; // Larger than any partition
+  renderMemBar(); updateStats();
+  log('Overflow: Try ALLOCATE with P1=120KB \u2014 larger than any 96KB partition!', 'log-fail');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DYNAMIC MODE
+// ═══════════════════════════════════════════════════════════
+function initDynamic() {
+  totalMem = parseInt(document.getElementById('total-mem').value) || 512;
+  segments  = [
+    { type: 'os',   label: 'OS',    size: OS_SIZE },
+    { type: 'free', label: 'Free', size: totalMem - OS_SIZE }
+  ];
+  processes = [];
+  colorIndex = 0;
+  nextFitPointer = 0; // FIX 2
+  renderMemBar();
+  updateStats();
+  log('Dynamic memory initialized: ' + totalMem + 'KB', 'log-alloc');
+}
+
+// FIX 8: Reclassify segments as 'hole' (between processes) vs 'free' (trailing)
+function reclassifySegments() {
+  let lastProcIdx = -1;
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (segments[i].type === 'process') { lastProcIdx = i; break; }
+  }
+  for (let i = 0; i < segments.length; i++) {
+    var s = segments[i];
+    if (s.type === 'hole' || s.type === 'free') {
+      if (lastProcIdx !== -1 && i < lastProcIdx) {
+        s.type  = 'hole';
+        s.label = 'Hole (' + s.size + 'KB)';
+      } else {
+        s.type  = 'free';
+        s.label = 'Free (' + s.size + 'KB)';
+      }
+    }
+  }
+}
+
+// FIX 2 + FIX 3 + FIX 8: Enhanced addProcessDynamic with Next Fit + scan animation
+function addProcessDynamic(name, size, onDone) {
+  var algo = document.getElementById('placement-algo').value;
+
+  // All free/hole segments
+  var allFreeSegs = segments.map(function(s, i) {
+    return { type: s.type, size: s.size, idx: i };
+  }).filter(function(s) {
+    return s.type === 'free' || s.type === 'hole';
+  });
+
+  var fittingHoles = allFreeSegs.filter(function(s) { return s.size >= size; });
+
+  if (fittingHoles.length === 0) {
+    log('Cannot allocate ' + name + ' (' + size + 'KB): no sufficient free hole', 'log-fail');
+    if (onDone) onDone(false);
+    return false;
+  }
+
+  var chosen, scanSegs;
+
+  if (algo === 'first') {
+    chosen = fittingHoles[0];
+    var chosenPosInAll = allFreeSegs.findIndex(function(s) { return s.idx === chosen.idx; });
+    scanSegs = allFreeSegs.slice(0, chosenPosInAll + 1);
+
+  } else if (algo === 'best') {
+    chosen = fittingHoles.reduce(function(a, b) { return a.size < b.size ? a : b; });
+    scanSegs = allFreeSegs;
+
+  } else if (algo === 'worst') {
+    chosen = fittingHoles.reduce(function(a, b) { return a.size > b.size ? a : b; });
+    scanSegs = allFreeSegs;
+
+  } else if (algo === 'next') {
+    var afterPtr  = fittingHoles.filter(function(h) { return h.idx >= nextFitPointer; });
+    var beforePtr = fittingHoles.filter(function(h) { return h.idx < nextFitPointer; });
+    var ordered   = afterPtr.concat(beforePtr);
+    chosen = ordered[0];
+
+    // Scan from pointer forward to chosen
+    var fromPtr = allFreeSegs.filter(function(s) { return s.idx >= nextFitPointer; });
+    var chosenInFrom = fromPtr.findIndex(function(s) { return s.idx === chosen.idx; });
+    if (chosenInFrom >= 0) {
+      scanSegs = fromPtr.slice(0, chosenInFrom + 1);
+    } else {
+      // Wrapped around
+      var beforeChosen = allFreeSegs.filter(function(s) { return s.idx < chosen.idx; });
+      scanSegs = fromPtr.concat(beforeChosen.slice(0, beforeChosen.findIndex(function(s) { return s.idx === chosen.idx; }) + 1));
+    }
+  }
+
+  var prevPointer = nextFitPointer;
+
+  function doAlloc() {
+    var color = COLORS[colorIndex % COLORS.length];
+    colorIndex++;
+    var pid  = 'pid_' + Date.now();
+    var proc = { pid: pid, name: name, size: size, color: color, status: 'allocated' };
+    processes.push(proc);
+
+    if (algo === 'next') {
+      nextFitPointer = chosen.idx;
+    }
+
+    var remainder = chosen.size - size;
+    var newSegs = [{ type: 'process', label: name, size: size, color: color, pid: pid }];
+    if (remainder > 0) newSegs.push({ type: 'hole', label: 'Hole (' + remainder + 'KB)', size: remainder });
+
+    segments.splice(chosen.idx, 1);
+    for (var si = 0; si < newSegs.length; si++) {
+      segments.splice(chosen.idx + si, 0, newSegs[si]);
+    }
+    reclassifySegments(); // FIX 8
+
+    renderMemBar();
+    updateStats();
+
+    var algoNames = { first: 'First Fit', best: 'Best Fit', worst: 'Worst Fit', next: 'Next Fit' };
+    if (algo === 'next') {
+      log('Next Fit: Allocated ' + name + ' (' + size + 'KB) into ' + chosen.size + 'KB hole (scan from pos ' + prevPointer + ')', 'log-alloc');
+    } else {
+      log(algoNames[algo] + ': Allocated ' + name + ' (' + size + 'KB) into ' + chosen.size + 'KB hole', 'log-alloc');
+    }
+
+    if (onDone) onDone(true);
+  }
+
+  if (onDone) {
+    // FIX 3: animated scan before allocation
+    runScanAnimation(algo, scanSegs, chosen, doAlloc);
+  } else {
+    // Preset loading: sync, no animation
+    doAlloc();
+  }
+
+  return true;
+}
+
+function deallocDynamic(pid) {
+  var idx = segments.findIndex(function(s) { return s.pid === pid; });
+  if (idx < 0) return;
+  var seg = segments[idx];
+  segments[idx] = { type: 'hole', label: 'Hole (' + seg.size + 'KB)', size: seg.size };
+  processes = processes.filter(function(p) { return p.pid !== pid; });
+  mergeHoles();
+  reclassifySegments(); // FIX 8
+  renderMemBar();
+  updateStats();
+  log('Deallocated process \u2014 hole created', 'log-dealloc');
+}
+
+function mergeHoles() {
+  var merged = true;
+  while (merged) {
+    merged = false;
+    for (var i = 0; i < segments.length - 1; i++) {
+      var a = segments[i], b = segments[i + 1];
+      if ((a.type === 'hole' || a.type === 'free') && (b.type === 'hole' || b.type === 'free')) {
+        segments.splice(i, 2, { type: 'free', label: 'Free (' + (a.size + b.size) + 'KB)', size: a.size + b.size });
+        merged = true;
+        break;
+      }
+    }
+  }
+}
+
+// ─── FIX 1: COMPACTION SLIDE ANIMATION ────────────────────
+function compact() {
+  if (currentMode !== 'dynamic') return;
+
+  var procs = segments.filter(function(s) { return s.type === 'process'; });
+  var holes = segments.filter(function(s) { return s.type === 'hole'; });
+
+  if (holes.length === 0) {
+    log('Nothing to compact \u2014 no external fragmentation', 'log-compact');
+    return;
+  }
+  if (procs.length === 0) {
+    log('Nothing to compact \u2014 no processes allocated', 'log-compact');
+    return;
+  }
+
+  log('Compacting memory\u2026', 'log-compact');
+
+  var bar    = document.getElementById('mem-bar');
+  var barTop = bar.getBoundingClientRect().top;
+
+  // Snapshot old pixel positions of each process segment by PID
+  var oldEls = Array.from(bar.querySelectorAll('.mem-segment'));
+  var oldPositions = {};
+  segments.forEach(function(seg, i) {
+    if (seg.type === 'process' && seg.pid) {
+      var el = oldEls[i];
+      if (el) oldPositions[seg.pid] = el.getBoundingClientRect().top - barTop;
+    }
+  });
+
+  // Build new compacted segment list
+  var totalFree = segments.reduce(function(acc, s) {
+    return (s.type !== 'os' && s.type !== 'process') ? acc + s.size : acc;
+  }, 0);
+  var os = segments.find(function(s) { return s.type === 'os'; });
+  segments = [os].concat(procs);
+  if (totalFree > 0) segments.push({ type: 'free', label: 'Free (' + totalFree + 'KB)', size: totalFree });
+
+  // Build new DOM — all elements start at opacity:0
+  bar.innerHTML = '';
+  var newEls = [];
+  segments.forEach(function(seg) {
+    var el = makeSegmentEl(seg);
+    el.style.flex = seg.size;
+    el.style.opacity = '0';
+    el.style.transition = 'none';
+    bar.appendChild(el);
+    newEls.push(el);
+  });
+  renderAddrRuler();
+
+  // After layout is calculated (two rAF passes)
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      // Calculate deltas and set initial transforms for process segments
+      var deltas = {};
+      procs.forEach(function(proc, i) {
+        var el = newEls[i + 1]; // +1 for OS
+        if (!el || oldPositions[proc.pid] === undefined) return;
+        var newTop = el.getBoundingClientRect().top - barTop;
+        var delta  = oldPositions[proc.pid] - newTop;
+        deltas[proc.pid] = delta;
+        el.style.transform = 'translateY(' + delta + 'px)';
+      });
+
+      // One more rAF to ensure transforms are applied before animation
+      requestAnimationFrame(function() {
+        // OS fades in
+        anime({ targets: newEls[0], opacity: [0, 1], duration: 280, easing: 'easeOutSine' });
+
+        // Process segments slide from old to new
+        procs.forEach(function(proc, i) {
+          var el    = newEls[i + 1];
+          if (!el) return;
+          var delta = deltas[proc.pid];
+
+          if (delta !== undefined) {
+            anime({
+              targets:  el,
+              translateY: [delta, 0],
+              opacity:  [1, 1],
+              duration: 600,
+              delay:    i * 80,
+              easing:   'easeInOutQuart',
+              begin:    function() { el.style.opacity = '1'; }
+            });
+          } else {
+            anime({ targets: el, opacity: [0, 1], duration: 400, delay: i * 80 });
+          }
+        });
+
+        // Free block fades in after all processes settle
+        var freeEl = totalFree > 0 ? newEls[newEls.length - 1] : null;
+        if (freeEl) {
+          anime({
+            targets:  freeEl,
+            opacity:  [0, 1],
+            duration: 400,
+            delay:    procs.length * 80 + 600,
+            easing:   'easeOutSine'
+          });
+        }
+
+        setTimeout(function() {
+          updateStats();
+          log('Compaction complete \u2014 ' + totalFree + 'KB in single free block', 'log-compact');
+        }, procs.length * 80 + 720);
+      });
+    });
+  });
+}
+
+// ─── FIX 3: PLACEMENT SCAN ANIMATION ──────────────────────
+function runScanAnimation(algo, scanSegs, chosen, callback) {
+  var memBar   = document.getElementById('mem-bar');
+  var allSegEls = Array.from(memBar.querySelectorAll('.mem-segment'));
+
+  var scanEls = scanSegs.map(function(s) { return allSegEls[s.idx]; }).filter(Boolean);
+  var chosenEl = chosen ? allSegEls[chosen.idx] : null;
+
+  if (scanEls.length === 0 && !chosenEl) { callback(); return; }
+
+  var d    = (algo === 'first' || algo === 'next') ? 150 : 100;
+  var step = 0;
+
+  function doStep() {
+    if (step >= scanEls.length) {
+      // Highlight chosen in green
+      if (chosenEl) {
+        chosenEl.style.outline   = '3px solid rgba(16,185,129,0.9)';
+        chosenEl.style.zIndex    = '2';
+        chosenEl.style.position  = 'relative';
+        setTimeout(function() {
+          chosenEl.style.outline  = '';
+          chosenEl.style.zIndex   = '';
+          setTimeout(callback, 60);
+        }, 420);
+      } else {
+        callback();
+      }
+      return;
+    }
+
+    var el = scanEls[step];
+    step++;
+    if (!el) { setTimeout(doStep, d); return; }
+
+    el.style.outline  = '2px solid rgba(6,182,212,0.8)';
+    el.style.zIndex   = '2';
+    el.style.position = 'relative';
+    setTimeout(function() {
+      el.style.outline  = '';
+      el.style.zIndex   = '';
+      setTimeout(doStep, 20);
+    }, Math.floor(d * 0.65));
+  }
+
+  doStep();
+}
+
+function loadPresetDynamic() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  segments  = [
+    { type: 'os',   label: 'OS',   size: OS_SIZE },
+    { type: 'free', label: 'Free', size: totalMem - OS_SIZE }
+  ];
+  processes = []; colorIndex = 0; nextFitPointer = 0;
+  renderMemBar();
+  updateStats();
+
+  // Silberschatz-style preset
+  setTimeout(function() {
+    addProcessDynamic('P1', 100);
+    setTimeout(function() { addProcessDynamic('P2', 80); }, 300);
+    setTimeout(function() { addProcessDynamic('P3', 60); }, 600);
+    setTimeout(function() {
+      var p2pid = null;
+      for (var i = 0; i < processes.length; i++) {
+        if (processes[i].name === 'P2') { p2pid = processes[i].pid; break; }
+      }
+      if (p2pid) deallocDynamic(p2pid);
+    }, 900);
+    setTimeout(function() { addProcessDynamic('P4', 50); }, 1200);
+  }, 300);
+}
+
+// FIX 9: Checkerboard preset (allocate 6, deallocate alternating)
+function loadPresetCheckerboard() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  segments  = [{ type: 'os', label: 'OS', size: OS_SIZE }];
+  segments.push({ type: 'free', label: 'Free', size: totalMem - OS_SIZE });
+  processes = []; colorIndex = 0; nextFitPointer = 0; processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  renderMemBar(); updateStats();
+
+  var names = ['P1','P2','P3','P4','P5','P6'];
+  names.forEach(function(n, i) {
+    setTimeout(function() { addProcessDynamic(n, 50); }, 200 + i * 250);
+  });
+
+  setTimeout(function() {
+    ['P1','P3','P5'].forEach(function(n, j) {
+      setTimeout(function() {
+        var p = processes.find(function(pr) { return pr.name === n; });
+        if (p) deallocDynamic(p.pid);
+      }, j * 180);
+    });
+    log('Checkerboard: alternating processes freed \u2014 classic external fragmentation!', 'log-fail');
+  }, 200 + 6 * 250 + 200);
+}
+
+// FIX 9: Pre-Compact preset (heavy fragmentation ready to compact)
+function loadPresetPreCompact() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+
+  var c0 = COLORS[0], c1 = COLORS[1], c2 = COLORS[2], c3 = COLORS[3];
+  var pid1 = 'pid_pre1', pid2 = 'pid_pre2', pid3 = 'pid_pre3', pid4 = 'pid_pre4';
+
+  processes = [
+    { pid: pid1, name: 'P1', size: 60,  color: c0, status: 'allocated' },
+    { pid: pid2, name: 'P2', size: 50,  color: c1, status: 'allocated' },
+    { pid: pid3, name: 'P3', size: 70,  color: c2, status: 'allocated' },
+    { pid: pid4, name: 'P4', size: 40,  color: c3, status: 'allocated' },
+  ];
+  colorIndex = 4; nextFitPointer = 0;
+  processCounter = 5;
+  document.getElementById('proc-name').value = 'P5';
+
+  segments = [
+    { type: 'os',      label: 'OS',             size: 64  },
+    { type: 'process', label: 'P1', size: 60,  color: c0, pid: pid1 },
+    { type: 'hole',    label: 'Hole (30KB)',     size: 30  },
+    { type: 'process', label: 'P2', size: 50,  color: c1, pid: pid2 },
+    { type: 'hole',    label: 'Hole (40KB)',     size: 40  },
+    { type: 'process', label: 'P3', size: 70,  color: c2, pid: pid3 },
+    { type: 'hole',    label: 'Hole (20KB)',     size: 20  },
+    { type: 'process', label: 'P4', size: 40,  color: c3, pid: pid4 },
+    { type: 'free',    label: 'Free (138KB)',    size: 138 },
+  ];
+
+  renderMemBar(); updateStats();
+  log('Pre-Compact: Heavy fragmentation. Hit COMPACT MEMORY to consolidate!', 'log-compact');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUDDY SYSTEM
+// ═══════════════════════════════════════════════════════════
+function nextPow2(n) {
+  var p = 1;
+  while (p < n) p *= 2;
+  return p;
+}
+
+function initBuddy() {
+  var mem = parseInt(document.getElementById('total-mem').value) || 512;
+  mem = nextPow2(mem);
+  document.getElementById('total-mem').value = mem;
+  totalMem = mem;
+  buddyRoot = { size: mem, start: 0, status: 'free', pid: null, left: null, right: null };
+  buddyAllocations = [];
+  processes  = [];
+  colorIndex = 0;
+  renderBuddy();
+  log('Buddy system initialized: ' + mem + 'KB', 'log-alloc');
+}
+
+function buddyAlloc(node, size, pid, color) {
+  if (node.status === 'alloc') return false;
+  if (node.size < size) return false;
+
+  if (node.status === 'free') {
+    if (node.size / 2 < size || node.size / 2 < 32) {
+      node.status = 'alloc';
+      node.pid    = pid;
+      node.color  = color;
+      return true;
+    }
+    // Split
+    node.status = 'split';
+    node.left  = { size: node.size/2, start: node.start,            status:'free', pid:null, left:null, right:null };
+    node.right = { size: node.size/2, start: node.start+node.size/2, status:'free', pid:null, left:null, right:null };
+  }
+
+  if (buddyAlloc(node.left,  size, pid, color)) return true;
+  if (buddyAlloc(node.right, size, pid, color)) return true;
+  return false;
+}
+
+function buddyFree(node, pid) {
+  if (!node) return false;
+  if (node.status === 'alloc' && node.pid === pid) {
+    node.status = 'free';
+    node.pid    = null;
+    node.color  = null;
+    return true;
+  }
+  var freed = buddyFree(node.left, pid) || buddyFree(node.right, pid);
+  if (freed) {
+    if (node.left && node.right &&
+        node.left.status  === 'free' && node.right.status === 'free' &&
+        !node.left.left   && !node.right.left) {
+      node.status = 'free';
+      node.left   = null;
+      node.right  = null;
+    }
+  }
+  return freed;
+}
+
+function getBuddyLeaves(node, leaves) {
+  leaves = leaves || [];
+  if (!node) return leaves;
+  if (node.status !== 'split') { leaves.push(node); return leaves; }
+  getBuddyLeaves(node.left,  leaves);
+  getBuddyLeaves(node.right, leaves);
+  return leaves;
+}
+
+function addProcessBuddy(name, size) {
+  var needed = nextPow2(Math.max(size, 32));
+  var color  = COLORS[colorIndex % COLORS.length];
+  colorIndex++;
+  var pid  = 'pid_' + Date.now();
+  var proc = { pid: pid, name: name, size: size, color: color, status: 'allocated' };
+
+  if (!buddyAlloc(buddyRoot, needed, pid, color)) {
+    log('Cannot allocate ' + name + ' (' + size + 'KB\u2192' + needed + 'KB block): not enough space', 'log-fail');
+    colorIndex--; // undo increment
+    return false;
+  }
+  processes.push(proc);
+  renderBuddy('split'); // FIX 6
+  updateStats();
+  log('Buddy: Allocated ' + name + ' (' + size + 'KB) \u2192 ' + needed + 'KB block', 'log-alloc');
+  return true;
+}
+
+function deallocBuddy(pid) {
+  buddyFree(buddyRoot, pid);
+  processes = processes.filter(function(p) { return p.pid !== pid; });
+  renderBuddy('merge'); // FIX 6
+  updateStats();
+  log('Buddy: Deallocated process \u2192 buddies merged', 'log-dealloc');
+}
+
+// FIX 6: animType = 'split' | 'merge' | null
+function renderBuddy(animType) {
+  var leaves = getBuddyLeaves(buddyRoot);
+
+  var bar = document.getElementById('mem-bar');
+  bar.innerHTML = '';
+
+  var osEl = makeSegmentEl({ type: 'os', label: 'OS', size: OS_SIZE });
+  osEl.style.flex = OS_SIZE;
+  bar.appendChild(osEl);
+
+  leaves.forEach(function(leaf) {
+    var el = document.createElement('div');
+    el.className  = 'mem-segment';
+    el.style.flex = leaf.size;
+    el.style.minHeight = Math.max(24, leaf.size / totalMem * 380) + 'px';
+
+    if (leaf.status === 'alloc' && leaf.color) {
+      el.style.background = leaf.color.bg;
+      el.style.borderLeft = '3px solid ' + leaf.color.border;
+      var proc  = processes.find(function(p) { return p.pid === leaf.pid; });
+      var waste = proc ? leaf.size - proc.size : 0;
+      el.innerHTML = '<span class="ms-label" style="color:' + leaf.color.text + '">' + (proc ? proc.name : '?') + '</span><span class="ms-size">' + leaf.size + 'KB</span>';
+      if (waste > 0) el.innerHTML += '<span class="ms-size" style="color:var(--amber);">+' + waste + 'KB waste</span>';
+      el.onclick = (function(lf, pr) { return function() { showBlockInfo({ label: pr ? pr.name : '?', size: lf.size, pid: lf.pid, type: 'process' }); }; })(leaf, proc);
+    } else {
+      el.className = 'mem-segment seg-free';
+      el.innerHTML = '<span class="ms-label">' + leaf.size + 'KB</span><span class="ms-size">free</span>';
+      el.onclick = (function(lf) { return function() { showBlockInfo({ label: 'Free', size: lf.size, type: 'free' }); }; })(leaf);
+    }
+    bar.appendChild(el);
+  });
+
+  renderBuddyTree(buddyRoot, animType);
+  renderAddrRuler();
+}
+
+// FIX 5 + FIX 6: renderBuddyTree with node animation and SVG line scheduling
+function renderBuddyTree(root, animType) {
+  var treeEl = document.getElementById('buddy-tree');
+  treeEl.innerHTML = '';
+
+  var level = [root];
+  while (level.length > 0 && level.some(function(n) { return n; })) {
+    var levelEl = document.createElement('div');
+    levelEl.className = 'tree-level';
+
+    level.forEach(function(node) {
+      if (!node) {
+        var empty = document.createElement('div');
+        empty.className = 'tree-node';
+        empty.style.visibility = 'hidden';
+        levelEl.appendChild(empty);
+        return;
+      }
+      var el = document.createElement('div');
+      el.className = 'tree-node';
+
+      if (node.status === 'free') {
+        el.classList.add('tn-free');
+        el.textContent = node.size + 'KB\nFREE';
+      } else if (node.status === 'split') {
+        el.classList.add('tn-split');
+        el.textContent = node.size + 'KB';
+      } else if (node.status === 'alloc' && node.color) {
+        el.classList.add('tn-alloc');
+        el.style.background  = node.color.bg;
+        el.style.borderColor = node.color.border;
+        el.style.color       = node.color.text;
+        var proc = processes.find(function(p) { return p.pid === node.pid; });
+        el.textContent = (proc ? proc.name : '?') + '\n' + node.size + 'KB';
+      }
+
+      levelEl.appendChild(el);
+    });
+
+    treeEl.appendChild(levelEl);
+
+    var next = [];
+    var allNull = true;
+    level.forEach(function(node) {
+      if (node && node.status === 'split') {
+        next.push(node.left  || null);
+        next.push(node.right || null);
+        allNull = false;
+      } else {
+        next.push(null);
+        next.push(null);
+      }
+    });
+    if (allNull) break;
+    level = next;
+  }
+
+  // FIX 6: animate tree nodes on split/merge
+  if (animType) {
+    var visibleNodes = Array.from(treeEl.querySelectorAll('.tree-node')).filter(function(el) {
+      return el.style.visibility !== 'hidden';
+    });
+    if (animType === 'split') {
+      anime({
+        targets:   visibleNodes,
+        scaleY:    [0.2, 1],
+        scaleX:    [0.6, 1],
+        opacity:   [0, 1],
+        duration:  350,
+        delay:     anime.stagger(22),
+        easing:    'easeOutExpo'
+      });
+    } else if (animType === 'merge') {
+      anime({
+        targets:   visibleNodes,
+        scaleY:    [1.2, 1],
+        opacity:   [0.4, 1],
+        duration:  400,
+        delay:     anime.stagger(20),
+        easing:    'easeInOutSine'
+      });
+    }
+  }
+
+  // FIX 5: schedule SVG edge lines after layout
+  requestAnimationFrame(function() {
+    requestAnimationFrame(drawBuddyTreeLines);
+  });
+}
+
+// FIX 5: Draw SVG connector lines on buddy tree
+function drawBuddyTreeLines() {
+  var wrap   = document.getElementById('buddy-tree-wrap');
+  var treeEl = document.getElementById('buddy-tree');
+  if (!wrap || wrap.style.display === 'none' || !treeEl) return;
+
+  // Remove old SVG overlay
+  var old = treeEl.querySelector('.tree-svg-overlay');
+  if (old) old.remove();
+
+  var treeRect = treeEl.getBoundingClientRect();
+  if (!treeRect.width || !treeRect.height) return;
+
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('tree-svg-overlay');
+  svg.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:10;overflow:visible;';
+  svg.setAttribute('width',  treeRect.width);
+  svg.setAttribute('height', treeRect.height);
+
+  var levels = Array.from(treeEl.querySelectorAll('.tree-level'));
+  var lines  = [];
+
+  for (var li = 0; li < levels.length - 1; li++) {
+    var parentNodes = Array.from(levels[li].querySelectorAll('.tree-node'));
+    var childNodes  = Array.from(levels[li + 1].querySelectorAll('.tree-node'));
+
+    parentNodes.forEach(function(parentEl, j) {
+      if (parentEl.style.visibility === 'hidden') return;
+      if (!parentEl.classList.contains('tn-split')) return;
+
+      var pR  = parentEl.getBoundingClientRect();
+      var px  = pR.left + pR.width  / 2 - treeRect.left;
+      var py  = pR.bottom - treeRect.top;
+
+      var children = [childNodes[j * 2], childNodes[j * 2 + 1]];
+      children.forEach(function(childEl) {
+        if (!childEl || childEl.style.visibility === 'hidden') return;
+        var cR  = childEl.getBoundingClientRect();
+        var cx  = cR.left + cR.width / 2 - treeRect.left;
+        var cy  = cR.top  - treeRect.top;
+
+        var len  = Math.sqrt((cx - px) * (cx - px) + (cy - py) * (cy - py));
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', px.toFixed(1));
+        line.setAttribute('y1', py.toFixed(1));
+        line.setAttribute('x2', cx.toFixed(1));
+        line.setAttribute('y2', cy.toFixed(1));
+        line.setAttribute('stroke', '#1e3a5f');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray',  len.toFixed(1));
+        line.setAttribute('stroke-dashoffset', len.toFixed(1));
+        svg.appendChild(line);
+        lines.push(line);
+      });
+    });
+  }
+
+  treeEl.appendChild(svg);
+
+  // Animate lines drawing on
+  if (lines.length > 0) {
+    anime({
+      targets:          lines,
+      strokeDashoffset: 0,
+      duration:         600,
+      delay:            anime.stagger(40),
+      easing:           'easeInOutSine'
+    });
+  }
+}
+
+function loadPresetBuddy() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  buddyRoot = { size: 512, start: 0, status: 'free', pid: null, left: null, right: null };
+  buddyAllocations = [];
+  processes  = [];
+  colorIndex = 0;
+  renderBuddy();
+  updateStats();
+
+  setTimeout(function() {
+    addProcessBuddy('P1', 70);
+    setTimeout(function() { addProcessBuddy('P2', 35); }, 400);
+    setTimeout(function() { addProcessBuddy('P3', 25); }, 800);
+  }, 300);
+}
+
+// FIX 9: Full Allocation preset
+function loadPresetBuddyFull() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  buddyRoot = { size: 512, start: 0, status: 'free', pid: null, left: null, right: null };
+  buddyAllocations = []; processes = []; colorIndex = 0; processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  renderBuddy(); updateStats();
+
+  setTimeout(function() {
+    addProcessBuddy('P1', 100);
+    setTimeout(function() { addProcessBuddy('P2', 60);  }, 350);
+    setTimeout(function() { addProcessBuddy('P3', 90);  }, 700);
+    setTimeout(function() { addProcessBuddy('P4', 200); }, 1050);
+  }, 300);
+}
+
+// FIX 9: Merge Cascade preset
+function loadPresetBuddyCascade() {
+  totalMem = 512;
+  document.getElementById('total-mem').value = 512;
+  buddyRoot = { size: 512, start: 0, status: 'free', pid: null, left: null, right: null };
+  buddyAllocations = []; processes = []; colorIndex = 0; processCounter = 1;
+  document.getElementById('proc-name').value = 'P1';
+  renderBuddy(); updateStats();
+
+  setTimeout(function() {
+    addProcessBuddy('P1', 20);
+    setTimeout(function() { addProcessBuddy('P2', 20); }, 350);
+    setTimeout(function() { addProcessBuddy('P3', 20); }, 700);
+    setTimeout(function() { addProcessBuddy('P4', 20); }, 1050);
+    setTimeout(function() {
+      log('Cascade: Free P1\u2192P2\u2192P3\u2192P4 from queue to watch 3-level buddy merge!', 'log-compact');
+      document.getElementById('proc-size').value = 20;
+    }, 1400);
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER MEM BAR (Fixed / Dynamic)
+// ═══════════════════════════════════════════════════════════
+// FIX 8: makeSegmentEl distinguishes 'hole' from 'free'
+function makeSegmentEl(seg) {
+  var el = document.createElement('div');
+  el.className  = 'mem-segment';
+  el.style.minHeight = Math.max(20, seg.size / totalMem * 380) + 'px';
+
+  if (seg.type === 'os') {
+    el.className = 'mem-segment seg-os';
+    el.innerHTML = '<span class="ms-label">OS</span><span class="ms-size">' + seg.size + 'KB</span>';
+
+  } else if (seg.type === 'frag') {
+    el.className = 'mem-segment seg-frag';
+    el.innerHTML = '<span class="ms-label" style="color:var(--amber);">' + seg.label + '</span>';
+
+  } else if (seg.type === 'hole') {
+    // External fragmentation hole — amber dashed border
+    el.className = 'mem-segment seg-hole';
+    el.innerHTML = '<span class="ms-label" style="color:var(--amber);">' + seg.size + 'KB</span><span class="ms-size">hole</span>';
+
+  } else if (seg.type === 'free') {
+    // Trailing free space — green tinted left border
+    el.className = 'mem-segment seg-free';
+    el.innerHTML = '<span class="ms-label">' + seg.size + 'KB</span><span class="ms-size">free</span>';
+
+  } else if (seg.type === 'process' && seg.color) {
+    el.style.background = seg.color.bg;
+    el.style.borderLeft = '3px solid ' + seg.color.border;
+    el.innerHTML = '<span class="ms-label" style="color:' + seg.color.text + '">' + seg.label + '</span><span class="ms-size">' + seg.size + 'KB</span>';
+  }
+
+  el.onclick = (function(s) { return function() { showBlockInfo(s); }; })(seg);
+  return el;
+}
+
+function renderMemBar() {
+  var bar  = document.getElementById('mem-bar');
+  bar.innerHTML = '';
+
+  segments.forEach(function(seg) {
+    var el = makeSegmentEl(seg);
+    el.style.flex = seg.size;
+    bar.appendChild(el);
+
+    el.style.opacity   = '0';
+    el.style.transform = 'scaleY(0.7)';
+    setTimeout(function() {
+      el.style.transition = 'opacity 0.3s, transform 0.3s';
+      el.style.opacity    = '1';
+      el.style.transform  = 'scaleY(1)';
+    }, 20);
+  });
+
+  renderAddrRuler();
+  updateAddrRange();
+}
+
+function renderAddrRuler() {
+  var ruler = document.getElementById('addr-ruler');
+  ruler.innerHTML = '';
+  ruler.style.position = 'relative';
+  ruler.style.minHeight = '400px';
+
+  var ticks = 8;
+  for (var i = 0; i <= ticks; i++) {
+    var addr = Math.round((totalMem / ticks) * i);
+    var pct  = (i / ticks) * 100;
+    var tick = document.createElement('div');
+    tick.className = 'ruler-tick';
+    tick.style.top = pct + '%';
+    tick.textContent = addr + 'K';
+    ruler.appendChild(tick);
+  }
+}
+
+function updateAddrRange() {
+  document.getElementById('s-total').textContent = totalMem + ' KB';
+  var hexMax = (totalMem * 4 - 1).toString(16).toUpperCase().padStart(4, '0');
+  document.getElementById('max-addr').textContent = hexMax;
+}
+
+// ─── BLOCK INFO PANEL ───────────────────────────────────────
+function showBlockInfo(seg) {
+  var el = document.getElementById('block-info');
+  var typeMap = { os: 'OS Kernel', process: 'Process', free: 'Free Space', frag: 'Internal Frag', hole: 'External Frag Hole' };
+  el.innerHTML =
+    '<div class="bd-row"><span>Type</span><span class="bd-val">' + (typeMap[seg.type] || seg.type) + '</span></div>' +
+    '<div class="bd-row"><span>Label</span><span class="bd-val">' + (seg.label || '\u2014') + '</span></div>' +
+    '<div class="bd-row"><span>Size</span><span class="bd-val" style="color:var(--cyan)">' + seg.size + ' KB</span></div>' +
+    (seg.type === 'process' ? '<div class="bd-row"><span>PID</span><span class="bd-val" style="font-size:0.5rem;">' + (seg.pid || '\u2014') + '</span></div>' : '') +
+    (seg.type === 'frag' ? '<div style="margin-top:0.5rem;font-size:0.58rem;color:var(--amber);line-height:1.5;">Internal fragmentation \u2014 allocated to partition but unused.</div>' : '') +
+    (seg.type === 'hole' ? '<div style="margin-top:0.5rem;font-size:0.58rem;color:var(--text3);line-height:1.5;">External fragmentation \u2014 free but not contiguous for large processes.</div>' : '');
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATS UPDATE  (FIX 4: correct external frag for dynamic)
+// ═══════════════════════════════════════════════════════════
+function updateStats() {
+  var allocated = 0, wasted = 0, holeCount = 0;
+
+  if (currentMode === 'fixed') {
+    partitions.forEach(function(p) {
+      if (p.pid) {
+        var proc = processes.find(function(pr) { return pr.pid === p.pid; });
+        if (proc) {
+          allocated += proc.size;
+          wasted    += p.size - proc.size;
+        }
+      }
+    });
+
+  } else if (currentMode === 'dynamic') {
+    // FIX 4: ext frag = sum of holes BETWEEN allocated blocks only
+    var lastProcIdx = -1;
+    for (var i = segments.length - 1; i >= 0; i--) {
+      if (segments[i].type === 'process') { lastProcIdx = i; break; }
+    }
+    segments.forEach(function(s, idx) {
+      if (s.type === 'process') {
+        allocated += s.size;
+      } else if (s.type === 'hole') {
+        // Only count as external frag if there's a process after it
+        if (lastProcIdx !== -1 && idx < lastProcIdx) {
+          wasted += s.size;
+          holeCount++;
+        }
+      }
+    });
+
+    document.getElementById('stat-holes').textContent = holeCount;
+    document.getElementById('frag-sub').textContent = holeCount > 0
+      ? 'KB between allocated blocks'
+      : 'no external fragmentation';
+
+  } else if (currentMode === 'buddy') {
+    if (buddyRoot) {
+      var leaves = getBuddyLeaves(buddyRoot);
+      leaves.forEach(function(leaf) {
+        if (leaf.status === 'alloc') {
+          allocated += leaf.size;
+          var proc   = processes.find(function(p) { return p.pid === leaf.pid; });
+          if (proc) wasted += leaf.size - proc.size;
+        }
+      });
+    }
+  }
+
+  var available = totalMem - OS_SIZE;
+  var util      = available > 0 ? Math.round((allocated / available) * 100) : 0;
+
+  document.getElementById('stat-util').textContent  = util + '%';
+  document.getElementById('util-bar').style.width   = util + '%';
+  document.getElementById('stat-frag').textContent  = wasted + ' KB';
+  document.getElementById('s-alloc').textContent    = allocated + ' KB';
+
+  // Free = trailing free segment(s)
+  var freeTotal = segments.reduce(function(acc, s) { return s.type === 'free' ? acc + s.size : acc; }, 0);
+  if (currentMode === 'buddy' && buddyRoot) {
+    freeTotal = getBuddyLeaves(buddyRoot).filter(function(l) { return l.status === 'free'; }).reduce(function(a, l) { return a + l.size; }, 0);
+  }
+  document.getElementById('s-free').textContent    = Math.max(0, freeTotal) + ' KB';
+  document.getElementById('s-wasted').textContent  = wasted + ' KB';
+  document.getElementById('s-total').textContent   = totalMem + ' KB';
+
+  renderProcList();
+}
+
+// ─── PROCESS LIST ───────────────────────────────────────────
+function renderProcList() {
+  var el = document.getElementById('proc-list');
+  if (processes.length === 0) {
+    el.innerHTML = '<div style="font-size:0.6rem;color:var(--text3);text-align:center;padding:1rem;">No processes allocated.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  processes.forEach(function(proc) {
+    var div = document.createElement('div');
+    div.className = 'proc-item';
+    div.style.borderLeftColor = proc.color ? proc.color.border : '#fff';
+    div.style.color           = proc.color ? proc.color.text   : '#fff';
+    div.innerHTML =
+      '<div><div class="proc-name">' + proc.name + '</div>' +
+      '<div class="proc-size">' + proc.size + ' KB \u00B7 ' + proc.status + '</div></div>' +
+      '<button class="proc-del" onclick="deallocProcess(\'' + proc.pid + '\')" title="Deallocate">\u2715</button>';
+    el.appendChild(div);
+  });
+}
+
+function deallocProcess(pid) {
+  if (currentMode === 'fixed')   deallocFixed(pid);
+  if (currentMode === 'dynamic') deallocDynamic(pid);
+  if (currentMode === 'buddy')   deallocBuddy(pid);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADD PROCESS — unified  (FIX 7: rejection anim, FIX 3: async)
+// ═══════════════════════════════════════════════════════════
+function addProcess() {
+  var name = document.getElementById('proc-name').value.trim() || ('P' + processCounter);
+  var size = parseInt(document.getElementById('proc-size').value) || 64;
+
+  if (size <= 0) { log('Process size must be > 0', 'log-fail'); return; }
+
+  if (currentMode === 'dynamic') {
+    if (isAnimating) return;
+
+    // Pre-check availability synchronously
+    var fitting = segments.filter(function(s) {
+      return (s.type === 'free' || s.type === 'hole') && s.size >= size;
+    });
+
+    if (fitting.length === 0) {
+      log('Cannot allocate ' + name + ' (' + size + 'KB): no sufficient free hole', 'log-fail');
+      showRejectionAnim(size);
+      return;
+    }
+
+    isAnimating = true;
+    addProcessDynamic(name, size, function(ok) {
+      isAnimating = false;
+      if (ok) {
+        processCounter++;
+        document.getElementById('proc-name').value  = 'P' + processCounter;
+        document.getElementById('proc-size').value  = Math.floor(Math.random() * 80 + 30);
+      } else {
+        showRejectionAnim(size);
+      }
+    });
+    return;
+  }
+
+  var ok = false;
+  if (currentMode === 'fixed')  ok = addProcessFixed(name, size);
+  if (currentMode === 'buddy')  ok = addProcessBuddy(name, size);
+
+  if (ok) {
+    processCounter++;
+    document.getElementById('proc-name').value = 'P' + processCounter;
+    document.getElementById('proc-size').value = Math.floor(Math.random() * 80 + 30);
+  } else {
+    showRejectionAnim(size); // FIX 7
+  }
+}
+
+// FIX 7: Animated rejection ghost in mem-bar
+function showRejectionAnim(size) {
+  var bar   = document.getElementById('mem-bar');
+  var ghost = document.createElement('div');
+  ghost.className = 'mem-segment rejected-ghost';
+
+  var minH = Math.max(28, size / totalMem * 380);
+  ghost.style.cssText =
+    'flex:' + Math.max(size, 30) + ';' +
+    'min-height:' + minH + 'px;' +
+    'background:rgba(59,130,246,0.06);' +
+    'border:1px solid rgba(239,68,68,0.55);' +
+    'border-left:3px solid var(--red);' +
+    'display:flex;align-items:center;justify-content:center;flex-direction:column;' +
+    'overflow:hidden;opacity:0;';
+  ghost.innerHTML =
+    '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.5rem;color:var(--red);font-weight:600;">REJECTED</span>' +
+    '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.45rem;color:rgba(239,68,68,0.7);">' + size + 'KB</span>';
+
+  bar.appendChild(ghost);
+
+  anime.timeline({ easing: 'easeInOutSine' })
+    .add({ targets: ghost, opacity: [0, 0.92], scaleY: [0.3, 1], duration: 180 })
+    .add({
+      targets: ghost,
+      translateX: [
+        { value: -8,  duration: 55 },
+        { value:  8,  duration: 55 },
+        { value: -6,  duration: 55 },
+        { value:  6,  duration: 55 },
+        { value: -3,  duration: 55 },
+        { value:  3,  duration: 55 },
+        { value:  0,  duration: 55 }
+      ],
+      borderColor: ['rgba(239,68,68,0.55)', 'rgba(239,68,68,1)', 'rgba(239,68,68,0.55)']
+    })
+    .add({ targets: ghost, opacity: [0.92, 0], scaleY: [1, 0.2], translateY: [0, 8], duration: 320, easing: 'easeInQuad' })
+    .finished.then(function() { ghost.remove(); });
+}
+
+// ═══════════════════════════════════════════════════════════
+// FIX 9: PRESET SCENARIOS
+// ═══════════════════════════════════════════════════════════
+var PRESETS = {
+  fixed: [
+    { value: 'fixed_textbook', label: 'Textbook Example'     },
+    { value: 'fixed_severe',   label: 'Severe Fragmentation' },
+    { value: 'fixed_overflow', label: 'Overflow Attempt'     }
+  ],
+  dynamic: [
+    { value: 'dyn_silberschatz', label: 'Silberschatz Example' },
+    { value: 'dyn_checkerboard', label: 'Checkerboard'         },
+    { value: 'dyn_precompact',   label: 'Pre-Compact'          }
+  ],
+  buddy: [
+    { value: 'buddy_default', label: 'Split to Depth 3' },
+    { value: 'buddy_full',    label: 'Full Allocation'  },
+    { value: 'buddy_cascade', label: 'Merge Cascade'    }
+  ]
+};
+
+function updatePresetSelect() {
+  var sel = document.getElementById('preset-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  var list = PRESETS[currentMode] || [];
+  list.forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    sel.appendChild(opt);
+  });
+}
+
+function loadPreset(value) {
+  switch (value) {
+    case 'fixed_textbook':   loadPresetFixed();           break;
+    case 'fixed_severe':     loadPresetFixedSevere();     break;
+    case 'fixed_overflow':   loadPresetFixedOverflow();   break;
+    case 'dyn_silberschatz': loadPresetDynamic();         break;
+    case 'dyn_checkerboard': loadPresetCheckerboard();    break;
+    case 'dyn_precompact':   loadPresetPreCompact();      break;
+    case 'buddy_default':    loadPresetBuddy();           break;
+    case 'buddy_full':       loadPresetBuddyFull();       break;
+    case 'buddy_cascade':    loadPresetBuddyCascade();    break;
+  }
+}
+
+// ─── PARTITION TYPE TOGGLE ─────────────────────────────────
+document.getElementById('partition-type').addEventListener('change', function() {
+  var custom = document.getElementById('custom-partitions');
+  if (this.value === 'custom') {
+    custom.style.display = '';
+    var n      = parseInt(document.getElementById('num-partitions').value) || 4;
+    var inputs = document.getElementById('partition-inputs');
+    inputs.innerHTML = '';
+    for (var i = 0; i < n; i++) {
+      var row = document.createElement('div');
+      row.className = 'part-row';
+      row.innerHTML = '<span>P' + (i + 1) + '</span><input type="number" value="112" min="32" placeholder="KB" />';
+      inputs.appendChild(row);
+    }
+  } else {
+    custom.style.display = 'none';
+  }
+});
+
+// ─── EVENT LOG ─────────────────────────────────────────────
+function log(msg, cls) {
+  cls = cls || '';
+  var logEl = document.getElementById('event-log');
+  var entry = document.createElement('div');
+  entry.className = 'log-entry ' + cls;
+  var time = new Date().toTimeString().slice(0, 8);
+  entry.textContent = '[' + time + '] ' + msg;
+  logEl.insertBefore(entry, logEl.firstChild);
+  if (logEl.children.length > 30) logEl.removeChild(logEl.lastChild);
+}
+
+// ─── INIT ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  setMode('fixed');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Singly Linked List Visualizer</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="tsparticles"></div>
+
+<div class="app-container">
+
+  <header>
+    <h1>Singly Linked List Visualizer</h1>
+  </header>
+
+  <!-- CONTROLS -->
+  <section class="controls">
+    <input type="number" id="valueInput" placeholder="Enter value" />
+    <button id="insertStart">Insert at Start</button>
+    <button id="insertEnd">Insert at End</button>
+    <button id="deleteValue">Delete</button>
+    <button id="searchValue">Search</button>
+    <button id="resetList">Reset</button>
+  </section>
+
+  <!-- STEP INFO -->
+  <section class="info-panel">
+    <p><strong>Step:</strong> <span id="stepText">Waiting...</span></p>
+  </section>
+
+  <!-- VISUALIZATION -->
+  <section class="visual-section">
+    <div id="listContainer" class="list-container"></div>
+  </section>
+
+</div>
+
+<!-- PARTICLES BACKGROUND -->
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+
+<script>
+tsParticles.load("tsparticles", {
+  background: { color: "#0d0d0d" },
+  particles: {
+    number: { value: 80 },
+    color: { value: "#00ff88" },
+    shape: { type: "circle" },
+    opacity: { value: 0.5 },
+    size: { value: 3 },
+    links: {
+      enable: true,
+      distance: 150,
+      color: "#00ff88",
+      opacity: 0.3,
+      width: 1
+    },
+    move: { enable: true, speed: 2 }
+  }
+});
+</script>
+
+<script src="script.js"></script>
+
+</body>
+</html>

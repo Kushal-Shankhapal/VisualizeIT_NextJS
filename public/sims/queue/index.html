@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Queue using Array Visualization</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <div id="tsparticles"></div>
+
+    <div class="app">
+
+        <h1>Queue (Array Implementation)</h1>
+
+        <div class="controls">
+
+            <input type="number" id="valueInput" placeholder="Enter value" aria-label="Value to enqueue">
+            <input type="number" id="sizeInput" placeholder="Queue size" value="6" min="1" max="20" aria-label="Queue size">
+
+            <button onclick="enqueue()" aria-label="Enqueue value">Enqueue</button>
+            <button onclick="dequeue()" aria-label="Dequeue value">Dequeue</button>
+            <button onclick="peek()" aria-label="Peek front element">Peek</button>
+            <button onclick="isEmpty()" aria-label="Check if queue is empty">Is Empty</button>
+            <button onclick="isFull()" aria-label="Check if queue is full">Is Full</button>
+            <button onclick="resetQueue()" aria-label="Reset queue">Reset</button>
+            <button onclick="resizeQueue()" aria-label="Resize queue">Resize</button>
+
+        </div>
+
+        <div class="info">
+
+            <div><b>Step:</b> <span id="stepText">Queue Ready</span></div>
+            <div><b>Time Complexity:</b> <span id="complexity">—</span></div>
+
+            <div class="pointer-info">
+                Front: <span id="frontIndex">-1</span> |
+                Rear: <span id="rearIndex">-1</span>
+            </div>
+
+        </div>
+
+        <div class="main-layout">
+
+            <div class="visual-section">
+
+                <div id="queueContainer" class="queue-container"></div>
+
+            </div>
+
+            <div class="code-section">
+
+                <select id="languageSelect" onchange="changeLanguage()">
+                    <option value="pseudocode" selected>Pseudocode</option>
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="go">Go</option>
+                </select>
+
+                <pre id="codeDisplay"></pre>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
+    <script>
+
+        tsParticles.load("tsparticles", {
+
+            background: { color: "#0d0d0d" },
+
+            particles: {
+                number: { value: 80 },
+                color: { value: "#00ff88" },
+                links: { enable: true, color: "#00ff88" },
+                move: { enable: true, speed: 2 }
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

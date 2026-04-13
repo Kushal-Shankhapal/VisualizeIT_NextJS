@@ -1,0 +1,133 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0d0d0d;
+  color: white;
+}
+
+/* PARTICLES */
+#tsparticles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.app-container {
+  padding: 30px;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  color: #00ff88;
+}
+
+/* CONTROLS */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button, input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  background: #00ff88;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00cc6a;
+}
+
+input {
+  background: #1a1a1a;
+  color: white;
+}
+
+/* INFO PANEL */
+.info-panel {
+  margin-bottom: 20px;
+  background: rgba(20,20,20,0.85);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+/* VISUAL SECTION */
+.visual-section {
+  padding: 40px 20px;
+  background: rgba(15,15,15,0.9);
+  border-radius: 12px;
+  min-height: 200px;
+  overflow-x: auto;
+}
+
+/* LIST CONTAINER */
+.list-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow-x: auto;
+}
+
+/* NODE WRAPPER */
+.node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* CIRCULAR NODE */
+.node {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  border: 3px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: black;
+  transition: 0.3s ease;
+}
+
+/* Highlight when searching */
+.node.highlight {
+  background: yellow;
+}
+
+/* ARROW */
+.arrow {
+  font-size: 26px;
+  color: #aaa;
+}
+
+/* LABELS */
+.node-label {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.head-label-style {
+  color: red;
+}
+
+.tail-label-style {
+  color: red;
+}
