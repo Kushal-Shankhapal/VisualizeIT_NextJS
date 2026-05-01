@@ -91,3 +91,16 @@ section {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* CG section variables — scoped so they don't conflict with VisualizeIT globals */
+.cg-scope {
+  --cg-bg: #0f0f0f;
+  --cg-surface: #161616;
+  --cg-surface-2: #1e1e1e;
+  --cg-text: #f0ece4;
+  --cg-text-muted: #8a8a8a;
+  --cg-violet: #7c6af7;
+  --cg-cyan: #22d3ee;
+  --cg-orange: #f97316;
+  --cg-border: #2a2a2a;
+}
