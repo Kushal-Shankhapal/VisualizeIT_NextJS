@@ -42,6 +42,16 @@ const commonDBMS: SimResources = {
   textbooks: [{ title: "Database System Concepts (Korth)", url: "https://db-book.com/", free: false }]
 };
 
+const commonCG: SimResources = {
+  nptel: [{ title: "NPTEL Computer Graphics", url: "https://nptel.ac.in/courses/106105086" }],
+  youtube: [
+    { title: "Neso Academy CG Playlist", channel: "Neso Academy", url: "https://www.youtube.com/playlist?list=PLBlnK6fEyqRiHMJnfYzx0BkPbYy7_1GIc" },
+    { title: "Gate Smashers Computer Graphics", channel: "Gate Smashers", url: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiGlh3DV7bMUcCfMmg6I5lbW" }
+  ],
+  articles: [{ title: "GFG Computer Graphics Tutorial", url: "https://www.geeksforgeeks.org/computer-graphics-2/" }],
+  textbooks: [{ title: "Computer Graphics: Principles and Practice (Foley et al.)", url: "https://www.cs.cornell.edu/courses/cs4620/2014fa/", free: true }]
+};
+
 export const RESOURCES: Record<string, SimResources> = {
   "sorting": commonDSA,
   "searching": commonDSA,
@@ -52,5 +62,6 @@ export const RESOURCES: Record<string, SimResources> = {
   "cpu-scheduling": commonOS,
   "disk-scheduling": commonOS,
   "page-replacement": commonOS,
-  "er-diagram": commonDBMS
+  "er-diagram": commonDBMS,
+  "line-algorithms": commonCG
 };

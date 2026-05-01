@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Line Algorithm Comparator — DDA vs Bresenham</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Platypi:wght@300;400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ -->
+<div id="top-bar">
+  <div class="top-bar-left">
+    <span class="top-bar-tag">Computer Graphics</span>
+    <span class="top-bar-sep">→</span>
+    <span class="top-bar-title">Line Algorithm Comparator</span>
+  </div>
+  <div class="top-bar-right">
+    <span class="top-bar-badge dda-badge">DDA</span>
+    <span class="top-bar-badge bres-badge">Bresenham</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-green"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="badge-dot" style="background:#7c6aff"></span>
+      Pixel-Level Visualization
+    </div>
+    <h1>DDA vs Bresenham's<br>Line Algorithm</h1>
+    <p class="hero-sub">
+      Watch two rasterization algorithms draw the same line — pixel by pixel.
+      Step through each decision, compare pixel choices, and inspect Bresenham's
+      decision parameter <span class="mono">p<sub>k</sub></span> live.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+   QUICK THEORY CARDS
+═══════════════════════════════════════ -->
+<div class="section-wrap">
+  <div class="theory-row">
+
+    <div class="theory-card accent-purple">
+      <div class="tc-label">DDA  —  Digital Differential Analyzer</div>
+      <p class="tc-desc">
+        Computes each pixel by incrementing floats along the parametric form of the line:
+      </p>
+      <div class="formula-block">
+        x<sub>i+1</sub> = x<sub>i</sub> + Δx/steps &nbsp;|&nbsp;
+        y<sub>i+1</sub> = y<sub>i</sub> + Δy/steps
+      </div>
+      <p class="tc-note">Uses floating-point arithmetic and <code>round()</code>.
+        Simple but slower on hardware due to FP ops.</p>
+    </div>
+
+    <div class="theory-card accent-green">
+      <div class="tc-label">Bresenham's Algorithm</div>
+      <p class="tc-desc">
+        Avoids floating-point entirely with an integer decision parameter:
+      </p>
+      <div class="formula-block">
+        p<sub>k</sub> = 2Δy − Δx &nbsp;(initial)<br>
+        If p<sub>k</sub> ≥ 0: plot (x+1, y+1), p<sub>k+1</sub> = p<sub>k</sub> + 2Δy − 2Δx<br>
+        If p<sub>k</sub> &lt; 0: plot (x+1, y),   p<sub>k+1</sub> = p<sub>k</sub> + 2Δy
+      </div>
+      <p class="tc-note">Purely integer arithmetic — fast, hardware-friendly, industry standard.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   CONTROLS PANEL
+═══════════════════════════════════════ -->
+<div class="section-wrap">
+  <div class="viz-box controls-box">
+    <div class="viz-header">
+      <span class="viz-title">Endpoint Configuration</span>
+      <span class="viz-hint">Drag endpoints directly on the canvas, or type below</span>
+    </div>
+    <div class="controls-body">
+
+      <div class="endpoint-group">
+        <div class="ep-label ep-label-0">P0</div>
+        <div class="ep-inputs">
+          <label>x<sub>0</sub><input type="number" id="x0" value="3" min="0" max="24"></label>
+          <label>y<sub>0</sub><input type="number" id="y0" value="20" min="0" max="24"></label>
+        </div>
+      </div>
+
+      <div class="ep-arrow">→</div>
+
+      <div class="endpoint-group">
+        <div class="ep-label ep-label-1">P1</div>
+        <div class="ep-inputs">
+          <label>x<sub>1</sub><input type="number" id="x1" value="22" min="0" max="24"></label>
+          <label>y<sub>1</sub><input type="number" id="y1" value="5" min="0" max="24"></label>
+        </div>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <div class="ctrl-group">
+        <button class="btn btn-primary" id="btn-draw" onclick="startDraw()">
+          <span>▶ Draw</span>
+        </button>
+        <button class="btn btn-ghost" id="btn-reset" onclick="resetAll()">
+          <span>↺ Reset</span>
+        </button>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <div class="ctrl-group step-group">
+        <button class="btn btn-ghost" id="btn-prev" onclick="stepPrev()" disabled>
+          ‹ Prev
+        </button>
+        <div class="step-counter">
+          <span id="step-cur">0</span> / <span id="step-max">0</span>
+        </div>
+        <button class="btn btn-ghost" id="btn-next" onclick="stepNext()" disabled>
+          Next ›
+        </button>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <div class="ctrl-group play-group">
+        <button class="btn btn-ghost" id="btn-play" onclick="togglePlay()" disabled>
+          ▶ Play
+        </button>
+        <div class="speed-ctrl">
+          <span class="speed-label">Speed</span>
+          <input type="range" id="speed-slider" min="1" max="10" value="4">
+          <span class="speed-val" id="speed-val">4</span>
+        </div>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <div class="ctrl-group zoom-group">
+        <span class="speed-label">Zoom</span>
+        <input type="range" id="zoom-slider" min="1" max="4" value="2" step="1" oninput="setZoom(this.value)">
+        <span class="speed-val" id="zoom-val">2×</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   CANVAS PANELS
+═══════════════════════════════════════ -->
+<div class="section-wrap">
+  <div class="canvas-row">
+
+    <!-- DDA -->
+    <div class="canvas-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-dot dda-dot"></span>
+          DDA Algorithm
+        </div>
+        <div class="panel-meta" id="dda-meta">—</div>
+      </div>
+      <div class="canvas-wrap" id="dda-wrap">
+        <canvas id="dda-canvas"></canvas>
+      </div>
+      <div class="panel-footer">
+        <div class="pixel-count">Pixels plotted: <span class="mono" id="dda-count">0</span></div>
+        <div class="algo-note">Float increments + round()</div>
+      </div>
+    </div>
+
+    <!-- Bresenham -->
+    <div class="canvas-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="panel-dot bres-dot"></span>
+          Bresenham's Algorithm
+        </div>
+        <div class="panel-meta" id="bres-meta">—</div>
+      </div>
+      <div class="canvas-wrap" id="bres-wrap">
+        <canvas id="bres-canvas"></canvas>
+      </div>
+      <div class="panel-footer">
+        <div class="pixel-count">Pixels plotted: <span class="mono" id="bres-count">0</span></div>
+        <div class="algo-note">Integer arithmetic only</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   BRESENHAM STEP TABLE
+═══════════════════════════════════════ -->
+<div class="section-wrap" id="table-section" style="display:none">
+  <div class="viz-box">
+    <div class="viz-header">
+      <span class="viz-title">Bresenham Decision Table</span>
+      <span class="viz-hint mono" id="table-algo-info">—</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table" id="bres-table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>p<sub>k</sub></th>
+            <th>Decision</th>
+            <th>Pixel (x, y)</th>
+          </tr>
+        </thead>
+        <tbody id="bres-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   COMPARISON METRICS
+═══════════════════════════════════════ -->
+<div class="section-wrap" id="metrics-section" style="display:none">
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="metric-val" id="m-total-pixels">—</div>
+      <div class="metric-lbl">Total Pixels</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" id="m-dda-pixels">—</div>
+      <div class="metric-lbl">DDA Pixels</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" id="m-bres-pixels">—</div>
+      <div class="metric-lbl">Bresenham Pixels</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" id="m-match">—</div>
+      <div class="metric-lbl">Pixel Match</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════ -->
+<div id="status-bar">
+  <span id="status-text">Set endpoints and click Draw to begin.</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

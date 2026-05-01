@@ -198,6 +198,28 @@
     ]
   },
   {
+    "id": "line-algorithms",
+    "title": "Line Algorithm Comparator",
+    "subject": "Computer Graphics",
+    "subjectCode": "161403",
+    "branch": "IT",
+    "year": 2,
+    "semester": 4,
+    "unit": "Unit II",
+    "description": "Compare DDA and Bresenham's line drawing algorithms pixel-by-pixel on a zoomed grid. Step through each decision, inspect the Bresenham pₖ parameter live, and watch both algorithms draw side by side.",
+    "tag": "CG",
+    "emoji": "📐",
+    "url": "/sims/computer-graphics/line-algorithms/index.html",
+    "type": "local",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Understand how DDA uses floating-point parametric increments",
+      "Master Bresenham's integer decision parameter pₖ and its update rule",
+      "Compare pixel choices between DDA and Bresenham for the same line",
+      "Recognize why Bresenham is preferred in hardware rasterization"
+    ]
+  },
+  {
     "id": "er-diagram",
     "title": "ER Diagram Builder",
     "subject": "Database Management System",
