@@ -1,5 +1,69 @@
 [
   {
+    "id": "turing-machine",
+    "title": "Turing Machine Interactive Lab",
+    "subject": "Theory of Computation",
+    "subjectCode": "314441",
+    "branch": "IT",
+    "year": 3,
+    "semester": 5,
+    "unit": "Unit V",
+    "description": "Complete interactive guide to Turing Machines. Explore the tape model, 7-tuple definition, and a library of 9 functional machines from simple scanners to Busy Beavers.",
+    "tag": "TOC",
+    "emoji": "🤖",
+    "url": "/simulations/toc-unit5",
+    "type": "react",
+    "difficulty": "Advanced",
+    "learnPoints": [
+      "Master the formal 7-tuple definition of TMs",
+      "Visualize tape-head interactions and execution traces",
+      "Explore 9 curated machines from binary adders to Busy Beavers",
+      "Understand the Church-Turing Thesis and Halting Problem"
+    ]
+  },
+  {
+    "id": "file-allocation",
+    "title": "File Allocation & I/O Buffering",
+    "subject": "Operating Systems",
+    "subjectCode": "161401",
+    "branch": "IT",
+    "year": 2,
+    "semester": 4,
+    "unit": "Unit V",
+    "description": "Interactive visualization of continuous, linked, and indexed file allocation methods alongside I/O buffering strategies.",
+    "tag": "OS",
+    "emoji": "💾",
+    "url": "/sims/file-allocation/index.html",
+    "type": "local",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Compare contiguous, linked, and indexed allocation",
+      "Understand internal and external fragmentation",
+      "Analyze I/O buffering impact on performance"
+    ]
+  },
+  {
+    "id": "memory-partition",
+    "title": "Memory Partitioning",
+    "subject": "Operating Systems",
+    "subjectCode": "161401",
+    "branch": "IT",
+    "year": 2,
+    "semester": 4,
+    "unit": "Unit III",
+    "description": "Simulate and compare First Fit, Best Fit, and Worst Fit memory allocation strategies with dynamic memory blocks.",
+    "tag": "OS",
+    "emoji": "🗄️",
+    "url": "/sims/memory-partition/index.html",
+    "type": "local",
+    "difficulty": "Intermediate",
+    "learnPoints": [
+      "Visualize First Fit, Best Fit, and Worst Fit algorithms",
+      "Understand dynamic memory partitioning logic",
+      "Observe the effects of memory fragmentation"
+    ]
+  },
+  {
     "id": "sorting",
     "title": "Sorting Algorithms Visualizer",
     "subject": "Data Structures",

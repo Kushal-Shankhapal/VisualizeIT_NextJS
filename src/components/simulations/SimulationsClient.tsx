@@ -40,7 +40,8 @@ export default function SimulationsClient({ userProfile, isLoggedIn, progressDat
     "Data Structures",
     "Operating Systems",
     "Database Management System",
-    "Computer Graphics"
+    "Computer Graphics",
+    "Theory of Computation"
   ];
 
   const units = ["All", "Unit I", "Unit II", "Unit III", "Unit IV", "Unit V"];

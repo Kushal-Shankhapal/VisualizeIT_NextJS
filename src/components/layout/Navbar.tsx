@@ -48,6 +48,9 @@ export default function Navbar() {
       { name: "Operating Systems", code: "161401", href: "/subjects/operating-systems" },
       { name: "Database Management System", code: "161402", href: "/subjects/dbms" },
       { name: "Computer Graphics", code: "161403", href: "/subjects/computer-graphics" },
+    ],
+    sem5: [
+      { name: "Theory of Computation", code: "314441", href: "/subjects/theory-of-computation" },
     ]
   };
 
@@ -89,11 +92,11 @@ export default function Navbar() {
 
                     {/* Mega menu */}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200">
-                      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-float)] p-5 w-[480px] grid grid-cols-2 gap-6">
-                        {(['sem3', 'sem4'] as const).map((sem) => (
+                      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-float)] p-5 w-[640px] grid grid-cols-3 gap-6">
+                        {(['sem3', 'sem4', 'sem5'] as const).map((sem) => (
                           <div key={sem}>
                             <p className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-[0.15em] mb-3">
-                              Semester {sem === 'sem3' ? 'III' : 'IV'}
+                              Semester {sem === 'sem3' ? 'III' : sem === 'sem4' ? 'IV' : 'V'}
                             </p>
                             <div className="space-y-1">
                               {subjects[sem].map(sub => (
@@ -207,10 +210,10 @@ export default function Navbar() {
                 </button>
                 {subjectsOpen && (
                   <div className="px-3 pb-3 pt-1 space-y-4">
-                    {(['sem3', 'sem4'] as const).map(sem => (
+                    {(['sem3', 'sem4', 'sem5'] as const).map(sem => (
                       <div key={sem}>
                         <p className="text-[9px] font-mono font-bold text-[var(--accent)] uppercase tracking-[0.15em] mb-2">
-                          Semester {sem === 'sem3' ? 'III' : 'IV'}
+                          Semester {sem === 'sem3' ? 'III' : sem === 'sem4' ? 'IV' : 'V'}
                         </p>
                         {subjects[sem].map(sub => (
                           <Link key={sub.code} href={sub.href} onClick={() => setMobileMenuOpen(false)}
