@@ -1,8 +1,8 @@
-# VisualizeIT 🚀
+# VisualizeIT
 
 > **Curriculum-aligned interactive simulation platform for engineering students at KBTCOE, affiliated with Savitribai Phule Pune University (SPPU).**
 
-Welcome to the team! 👋 We are super excited to have you on board. This README will serve as your ultimate guide to understanding how VisualizeIT works, how to get it running on your machine, and how to contribute to the project.
+This README will serve as your ultimate guide to understanding how VisualizeIT works, how to get it running on your machine, and how to contribute to the project.
 
 ---
 
