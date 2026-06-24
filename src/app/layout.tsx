@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import OnboardingGate from "@/components/auth/OnboardingGate";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,6 +44,7 @@ export default function RootLayout({
             </div>
           </OnboardingGate>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
