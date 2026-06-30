@@ -11,9 +11,6 @@
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
-*A BE Capstone Project — K.B.T. College of Engineering, Gokul Shirgaon, Kolhapur*
-*Savitribai Phule Pune University (SPPU) — Computer Engineering, Sem III & IV*
-
 </div>
 
 ---
@@ -758,20 +755,6 @@ VisualizeIT is deployed on **Vercel** with continuous deployment from GitHub:
 | Build Command | `next build --webpack` |
 | Node.js Version | 18.x |
 
----
-
-## 👥 Team
-
-| Name | Role |
-|---|---|
-| **Kushal Shankhapal** | Full-Stack Lead — Architecture, Auth, Database, CG Module, TOC Module, Deployment |
-| **Yash** | Full-Stack — Simulations, Documentation, Testing |
-| **Pushpak Nikam** | Simulations, UI |
-| **Shubham Palde** | Simulations, UI |
-
-**Institution:** K.B.T. College of Engineering, Gokul Shirgaon, Kolhapur
-**Affiliation:** Savitribai Phule Pune University (SPPU)
-**Programme:** B.E. Computer Engineering — Final Year Capstone Project (2025–26)
 
 ---
 
@@ -797,7 +780,7 @@ VisualizeIT was built as a BE capstone project but is designed to scale. Here is
 | 🌐 **Multi-Engine Simulation Platform** | VisualizeIT evolving into a **Full-Stack Multi-Engine Simulation Platform** — a hub where educators publish curriculum-aligned simulations built in any stack (vanilla JS, React, Godot WASM, Manim, PhET) under one unified student interface with GitHub-style discoverability |
 | 🤖 **Enhanced AI Tutoring** | Expand "Ask AI" with simulation-aware context injection, code explanation, and step-by-step worked examples via Gemini Pro |
 | 📱 **Mobile App** | React Native companion app for offline simulation access and push notification study reminders |
-| 🏫 **Multi-Institution Expansion** | Extend beyond KBTCOE to other SPPU-affiliated colleges; curriculum mapping to multiple universities |
+| 🏫 **Multi-Institution Expansion** | Extend beyond our college to other SPPU-affiliated colleges; curriculum mapping to multiple universities |
 | 📊 **Faculty Analytics Dashboard** | Educator-facing view showing class-level quiz performance, weakest simulation topics, and student engagement heatmaps |
 | 🏆 **Gamification Layer** | Leaderboards, streaks, badges, and XP points to drive engagement |
 | 🔗 **LMS Integration** | Moodle/Google Classroom integration so progress syncs with institutional LMS |
@@ -818,8 +801,6 @@ Static iframes          →  Manim / PhET / Godot WASM sim engines
 ---
 
 <div align="center">
-
-**Built with ❤️ at KBTCOE for the engineering students of SPPU**
 
 [🌐 Live Site](https://visualize-it.tech/) · [📊 Dashboard](https://visualize-it.tech/dashboard) · [🎮 Simulations](https://visualize-it.tech/simulations)
 
